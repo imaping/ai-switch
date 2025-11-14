@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Atlas Logo Symbol">
+  <title>Atlas Logo Symbol</title>
+  <defs>
+    <style>
+      .atlas-blue { stroke: #1F5FFF; }
+      .atlas-orange { stroke: #FF7A45; }
+    </style>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer ring -->
+    <circle cx="128" cy="128" r="108" class="atlas-blue" stroke-width="12"/>
+
+    <!-- A letter diagonals (Atlas A) -->
+    <path d="M84 196 L128 64 L172 196" class="atlas-blue" stroke-width="22"/>
+
+    <!-- Meridian arc as crossbar -->
+    <path d="M100 148 A 60 60 0 0 1 156 148" class="atlas-orange" stroke-width="22"/>
+
+    <!-- Subtle central meridian -->
+    <path d="M128 64 L128 196" class="atlas-blue" stroke-width="10" opacity=".25"/>
+  </g>
+</svg>
+
