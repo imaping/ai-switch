@@ -1,10 +1,21 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+const packageJson = JSON.parse(
+  readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
+)
+
 export default defineNuxtConfig({
   // Nuxt 4 默认 srcDir 为 app/，这里显式指定，便于团队理解目录结构
   srcDir: 'app',
   compatibilityDate: '2025-07-15',
 
   modules: ['@nuxt/ui', '@pinia/nuxt'],
+
+  appConfig: {
+    version: packageJson.version
+  },
 
   // 全局样式：引入 Tailwind 与 Nuxt UI 的样式入口。
   // 若未配置该项，页面将呈现为未样式化的纯 HTML（你看到的现象）。

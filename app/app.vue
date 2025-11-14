@@ -2,6 +2,7 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
+const appConfig = useAppConfig()
 
 const items = computed<NavigationMenuItem[]>(() => [
   {
@@ -20,6 +21,8 @@ const items = computed<NavigationMenuItem[]>(() => [
     active: route.path.startsWith('/remote')
   }
 ])
+
+const version = appConfig.version
 </script>
 
 <template>
@@ -44,7 +47,7 @@ const items = computed<NavigationMenuItem[]>(() => [
     <UFooter>
       <template #left>
         <p class="text-muted text-sm">
-          Copyright © {{ new Date().getFullYear() }}
+          Copyright © {{ new Date().getFullYear() }} · v{{ version }}
         </p>
       </template>
 
