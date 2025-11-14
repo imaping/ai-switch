@@ -352,7 +352,14 @@ const mcpColumns: TableColumn<CodexMcpRecord>[] = [
   {
     id: 'doc',
     header: t('codex.doc'),
-    cell: ({ row }) => h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 truncate max-w-md' }, row.original.docUrl || t('codex.noDocLink'))
+    cell: ({ row }) => row.original.docUrl
+      ? h('a', {
+        href: row.original.docUrl,
+        target: '_blank',
+        rel: 'noreferrer',
+        class: 'text-primary hover:underline text-sm'
+      }, row.original.docUrl)
+      : h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('codex.noDocLink'))
   },
   {
     id: 'enabled',
