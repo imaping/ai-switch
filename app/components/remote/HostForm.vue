@@ -59,9 +59,10 @@
     <!-- 认证方式 -->
     <div class="space-y-4">
       <UFormField  label="认证方式" name="authType" required>
-        <URadioGroup
+        <USelect
+          class="w-full"
           v-model="formState.authType"
-          :options="[
+          :items="[
             { label: '密码认证', value: 'password' },
             { label: '密钥认证', value: 'privateKey' },
           ]"
