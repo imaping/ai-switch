@@ -59,6 +59,27 @@ export const sftpLogger = logger.child({
 })
 
 /**
+ * 创建 Claude 服务日志记录器
+ */
+export const claudeServiceLogger = logger.child({
+  module: 'claude-service',
+})
+
+/**
+ * 创建 Codex 服务日志记录器
+ */
+export const codexServiceLogger = logger.child({
+  module: 'codex-service',
+})
+
+/**
+ * 创建 API 错误日志记录器
+ */
+export const apiErrorLogger = logger.child({
+  module: 'api-error',
+})
+
+/**
  * 导出日志级别枚举
  */
 export const LogLevel = {

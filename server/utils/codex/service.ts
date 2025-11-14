@@ -8,6 +8,7 @@ import type {
   CodexMcpPayload,
   CodexMcpRecord
 } from '#shared/types/codex'
+import { codexServiceLogger } from '../logger'
 
 type TomlObject = Record<string, unknown>
 type BaseUrlTarget = { scope: 'root' } | { scope: 'provider'; name: string }
@@ -66,6 +67,7 @@ async function readCodexConfigFile(): Promise<CodexConfigFile | null> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null
     }
+    codexServiceLogger.error({ error, path: CODEX_CONFIG_PATH }, '读取 Codex 配置文件失败')
     throw error
   }
 }
@@ -455,7 +457,10 @@ export async function updateCodexEnvironment(
 export async function getCodexEnvironment(id: string) {
   const environments = await readEnvironmentStore()
   const record = environments.find((env) => env.id === id)
-  if (!record) throw new Error('环境不存在')
+  if (!record) {
+    codexServiceLogger.warn({ id }, 'Codex 环境不存在')
+    throw new Error('环境不存在')
+  }
   return record
 }
 
@@ -463,19 +468,23 @@ export async function deleteCodexEnvironment(id: string) {
   const environments = await readEnvironmentStore()
   const record = environments.find((env) => env.id === id)
   if (!record) {
+    codexServiceLogger.warn({ id }, '删除失败：Codex 环境不存在')
     throw new Error('环境不存在')
   }
   if (record.status === 'active') {
+    codexServiceLogger.warn({ id, status: record.status }, '删除失败：Codex 环境处于启用状态')
     throw new Error('启用状态不可删除')
   }
   const updated = environments.filter((env) => env.id !== id)
   await writeEnvironmentStore(updated)
+  codexServiceLogger.info({ id, title: record.title }, 'Codex 环境已删除')
 }
 
 export async function activateCodexEnvironment(id: string) {
   const environments = await readEnvironmentStore()
   const record = environments.find((env) => env.id === id)
   if (!record) {
+    codexServiceLogger.warn({ id }, '激活失败：Codex 环境不存在')
     throw new Error('环境不存在')
   }
 
@@ -496,6 +505,7 @@ export async function activateCodexEnvironment(id: string) {
   )
   await writeEnvironmentStore(updated)
 
+  codexServiceLogger.info({ id, title: record.title }, 'Codex 环境已激活')
   return { ...record, status: 'active' as const, updatedAt: now }
 }
 
@@ -520,6 +530,7 @@ export async function upsertCodexMcp(payload: CodexMcpPayload) {
   if (payload.id) {
     const index = servers.findIndex((item) => item.id === payload.id)
     if (index === -1) {
+      codexServiceLogger.warn({ id: payload.id }, '更新失败：Codex MCP 不存在')
       throw new Error('未找到指定 MCP')
     }
     record = {
@@ -555,6 +566,7 @@ export async function toggleCodexMcp(id: string, enabled: boolean) {
   const servers = await readMcpStore()
   const index = servers.findIndex((item) => item.id === id)
   if (index === -1) {
+    codexServiceLogger.warn({ id }, '切换失败：Codex MCP 不存在')
     throw new Error('未找到指定 MCP')
   }
 
@@ -566,6 +578,7 @@ export async function toggleCodexMcp(id: string, enabled: boolean) {
   await writeMcpStore(servers)
   await rewriteConfigMcpSection(servers)
 
+  codexServiceLogger.info({ id, name: servers[index].name, enabled }, 'Codex MCP 状态已切换')
   return servers[index]
 }
 
@@ -573,12 +586,15 @@ export async function deleteCodexMcp(id: string) {
   const servers = await readMcpStore()
   const record = servers.find((item) => item.id === id)
   if (!record) {
+    codexServiceLogger.warn({ id }, '删除失败：Codex MCP 不存在')
     throw new Error('MCP 配置不存在')
   }
   if (record.enabled) {
+    codexServiceLogger.warn({ id, name: record.name }, '删除失败：Codex MCP 处于启用状态')
     throw new Error('启用状态不可删除')
   }
   const updated = servers.filter((item) => item.id !== id)
   await writeMcpStore(updated)
   await rewriteConfigMcpSection(updated)
+  codexServiceLogger.info({ id, name: record.name }, 'Codex MCP 已删除')
 }

@@ -8,6 +8,7 @@ import type {
 import { REMOTE_ENV_STORE_PATH } from '../paths'
 import { readJsonFile, writeJsonFile } from '../fs'
 import { sshPool } from './ssh-pool'
+import { remoteServiceLogger } from '../logger'
 
 const EMPTY_STORE = { environments: [] as RemoteEnvironmentRecord[] }
 
@@ -49,7 +50,10 @@ export async function getRemoteEnvironment(
 ): Promise<RemoteEnvironmentRecord> {
   const list = await readStore()
   const record = list.find((e) => e.id === id)
-  if (!record) throw new Error('远程环境不存在')
+  if (!record) {
+    remoteServiceLogger.warn({ id }, '远程环境不存在')
+    throw new Error('远程环境不存在')
+  }
   return record
 }
 
@@ -78,7 +82,10 @@ export async function upsertRemoteEnvironment(
 
   if (id) {
     const index = environments.findIndex((e) => e.id === id)
-    if (index === -1) throw new Error('未找到指定环境')
+    if (index === -1) {
+      remoteServiceLogger.warn({ id }, '更新失败：远程环境不存在')
+      throw new Error('未找到指定环境')
+    }
     const record: RemoteEnvironmentRecord = {
       ...environments[index],
       ...payload,
@@ -87,6 +94,7 @@ export async function upsertRemoteEnvironment(
     }
     environments[index] = record
     await writeStore(environments)
+    remoteServiceLogger.info({ id, title: record.title }, '远程环境已更新')
     return record
   }
 
@@ -104,13 +112,17 @@ export async function upsertRemoteEnvironment(
   }
   environments.push(record)
   await writeStore(environments)
+  remoteServiceLogger.info({ id: record.id, title: record.title, host: record.host }, '远程环境已创建')
   return record
 }
 
 export async function deleteRemoteEnvironment(id: string) {
   const environments = await readStore()
   const record = environments.find((e) => e.id === id)
-  if (!record) throw new Error('环境不存在')
+  if (!record) {
+    remoteServiceLogger.warn({ id }, '删除失败：远程环境不存在')
+    throw new Error('环境不存在')
+  }
 
   const updated = environments.filter((e) => e.id !== id)
   await writeStore(updated)
@@ -120,15 +132,20 @@ export async function deleteRemoteEnvironment(id: string) {
     const connId = `${record.username}@${record.host}:${record.port}`
     sshPool.close(connId)
   }
+
+  remoteServiceLogger.info({ id, title: record.title, host: record.host }, '远程环境已删除')
 }
 
 export async function testRemoteConnection(id: string): Promise<RemoteTestConnectionResult> {
   const environments = await readStore()
   const index = environments.findIndex((e) => e.id === id)
   if (index === -1) {
+    remoteServiceLogger.warn({ id }, '测试连接失败：远程环境不存在')
     throw new Error('远程环境不存在')
   }
   const record = environments[index]
+
+  remoteServiceLogger.info({ id, host: record.host, username: record.username }, '开始测试远程连接')
 
   const started = Date.now()
   const timeoutMs = 5000
@@ -184,6 +201,13 @@ export async function testRemoteConnection(id: string): Promise<RemoteTestConnec
     if (errorMessage.toLowerCase().includes('timeout') || errorMessage.includes('超时')) {
       isTimeout = true
     }
+    remoteServiceLogger.error({
+      id,
+      host: record.host,
+      username: record.username,
+      error: errorMessage,
+      isTimeout
+    }, '远程连接测试失败')
   }
 
   const testedAt = new Date().toISOString()
@@ -198,6 +222,12 @@ export async function testRemoteConnection(id: string): Promise<RemoteTestConnec
   await writeStore(environments)
 
   if (ok) {
+    remoteServiceLogger.info({
+      id,
+      host: record.host,
+      username: record.username,
+      latencyMs
+    }, '远程连接测试成功')
     return { ok: true, latencyMs, testedAt }
   }
 

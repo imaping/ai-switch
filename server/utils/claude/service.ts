@@ -8,6 +8,7 @@ import type {
   ClaudeMcpPayload,
   ClaudeMcpRecord
 } from '#shared/types/claude'
+import { claudeServiceLogger } from '../logger'
 
 const EMPTY_ENV_STORE = { environments: [] as ClaudeEnvironmentRecord[] }
 const EMPTY_MCP_STORE = { servers: [] as ClaudeMcpRecord[] }
@@ -36,6 +37,7 @@ async function readClaudeSettings(): Promise<ClaudeCodeConfig | null> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null
     }
+    claudeServiceLogger.error({ error, path: CLAUDE_SETTINGS_PATH }, '读取 Claude 配置文件失败')
     throw error
   }
 }
@@ -319,7 +321,10 @@ export async function updateClaudeEnvironment(
 export async function getClaudeEnvironment(id: string) {
   const environments = await readEnvironmentStore()
   const record = environments.find((env) => env.id === id)
-  if (!record) throw new Error('环境不存在')
+  if (!record) {
+    claudeServiceLogger.warn({ id }, 'Claude 环境不存在')
+    throw new Error('环境不存在')
+  }
   return record
 }
 
@@ -327,19 +332,23 @@ export async function deleteClaudeEnvironment(id: string) {
   const environments = await readEnvironmentStore()
   const record = environments.find((env) => env.id === id)
   if (!record) {
+    claudeServiceLogger.warn({ id }, '删除失败：Claude 环境不存在')
     throw new Error('环境不存在')
   }
   if (record.status === 'active') {
+    claudeServiceLogger.warn({ id, status: record.status }, '删除失败：Claude 环境处于启用状态')
     throw new Error('启用状态不可删除')
   }
   const updated = environments.filter((env) => env.id !== id)
   await persistEnvironmentList(updated)
+  claudeServiceLogger.info({ id, title: record.title }, 'Claude 环境已删除')
 }
 
 export async function activateClaudeEnvironment(id: string) {
   const environments = await readEnvironmentStore()
   const record = environments.find((env) => env.id === id)
   if (!record) {
+    claudeServiceLogger.warn({ id }, '激活失败：Claude 环境不存在')
     throw new Error('环境不存在')
   }
 
@@ -353,6 +362,7 @@ export async function activateClaudeEnvironment(id: string) {
   )
   await persistEnvironmentList(updated)
 
+  claudeServiceLogger.info({ id, title: record.title }, 'Claude 环境已激活')
   return { ...record, status: 'active' as const, updatedAt: now }
 }
 
@@ -381,6 +391,7 @@ export async function upsertClaudeMcp(payload: ClaudeMcpPayload) {
   if (payload.id) {
     const index = servers.findIndex((item) => item.id === payload.id)
     if (index === -1) {
+      claudeServiceLogger.warn({ id: payload.id }, '更新失败：Claude MCP 不存在')
       throw new Error('未找到指定 MCP')
     }
     record = {
@@ -421,6 +432,7 @@ export async function toggleClaudeMcp(id: string, enabled: boolean) {
   const servers = await readMcpStore()
   const index = servers.findIndex((item) => item.id === id)
   if (index === -1) {
+    claudeServiceLogger.warn({ id }, '切换失败：Claude MCP 不存在')
     throw new Error('未找到指定 MCP')
   }
 
@@ -430,6 +442,7 @@ export async function toggleClaudeMcp(id: string, enabled: boolean) {
     updatedAt: new Date().toISOString()
   }
   await writeMcpStore(servers)
+  claudeServiceLogger.info({ id, name: servers[index].name, enabled }, 'Claude MCP 状态已切换')
 
   if (enabled) {
     await writeClaudeMcpConfig((current) => ({
@@ -457,11 +470,14 @@ export async function deleteClaudeMcp(id: string) {
   const servers = await readMcpStore()
   const record = servers.find((item) => item.id === id)
   if (!record) {
+    claudeServiceLogger.warn({ id }, '删除失败：Claude MCP 不存在')
     throw new Error('MCP 配置不存在')
   }
   if (record.enabled) {
+    claudeServiceLogger.warn({ id, name: record.name }, '删除失败：Claude MCP 处于启用状态')
     throw new Error('启用状态不可删除')
   }
   const updated = servers.filter((item) => item.id !== id)
   await writeMcpStore(updated)
+  claudeServiceLogger.info({ id, name: record.name }, 'Claude MCP 已删除')
 }
