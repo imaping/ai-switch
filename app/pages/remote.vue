@@ -3,13 +3,13 @@
     <!-- 页头 -->
     <div class="mb-8">
       <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-        远程主机管理
+        {{ t('remote.title') }}
       </p>
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 class="text-4xl font-bold">远程主机管理</h1>
+          <h1 class="text-4xl font-bold">{{ t('remote.pageTitle') }}</h1>
           <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            通过 SSH 连接管理远程主机上的 AI 环境配置
+            {{ t('remote.pageSubtitle') }}
           </p>
         </div>
       </div>
@@ -20,19 +20,19 @@
       <template #header>
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-xl font-semibold">SSH 主机列表</h2>
+            <h2 class="text-xl font-semibold">{{ t('remote.hostList') }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              添加、编辑或删除远程主机配置
+              {{ t('remote.hostListDesc') }}
             </p>
           </div>
           <UButton icon="i-heroicons-plus" @click="openHostModal()">
-            新增
+            {{ t('remote.addHost') }}
           </UButton>
         </div>
       </template>
 
       <div v-if="environments.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        暂无远程主机,请先添加。
+        {{ t('remote.noHosts') }}
       </div>
       <div v-else>
         <UTable :data="environments" :columns="hostColumns" />
@@ -40,14 +40,14 @@
     </UCard>
 
     <!-- 主机表单模态框（统一布局：标题 + #body + #footer） -->
-    <UModal v-model:open="hostModalOpen" :title="editingHost ? '编辑主机' : '添加主机'" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
+    <UModal v-model:open="hostModalOpen" :title="editingHost ? t('remote.editHost') : t('remote.addHostTitle')" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
       <template #body>
         <RemoteHostForm ref="hostFormRef" :initial-value="editingHost" @close="closeHostModal" />
       </template>
       <template #footer>
-        <UButton variant="outline" @click="closeHostModal">取消</UButton>
+        <UButton variant="outline" @click="closeHostModal">{{ t('common.cancel') }}</UButton>
         <UButton :loading="hostFormRef?.isSubmitting?.()" @click="hostFormRef?.submit()">
-          {{ editingHost ? '保存修改' : '添加主机' }}
+          {{ editingHost ? t('remote.saveChanges') : t('remote.addHostTitle') }}
         </UButton>
       </template>
     </UModal>
@@ -57,11 +57,13 @@
       <template #content>
         <UCard class="max-h-[85dvh] overflow-y-auto">
           <template #header>
-            <h3 class="text-xl font-semibold">删除主机</h3>
+            <h3 class="text-xl font-semibold">{{ t('remote.deleteHost') }}</h3>
           </template>
 
           <p class="mb-6 text-gray-700 dark:text-gray-300">
-            确认删除 "{{ confirmDialog.host?.title || '未命名主机' }}" 吗?此操作不可恢复。
+            {{ t('remote.deleteConfirmMessage', {
+              name: confirmDialog.host?.title || t('remote.unnamedHost')
+            }) }}
           </p>
 
           <div class="flex justify-end gap-3">
@@ -70,14 +72,14 @@
               :disabled="confirmLoading"
               @click="closeConfirmDialog"
             >
-              取消
+              {{ t('common.cancel') }}
             </UButton>
             <UButton
               color="red"
               :loading="confirmLoading"
               @click="handleConfirmDelete"
             >
-              确认删除
+              {{ t('remote.confirmDelete') }}
             </UButton>
           </div>
         </UCard>
@@ -90,6 +92,8 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { RemoteEnvironmentRecord } from '#shared/types/remote'
+
+const { t } = useI18n()
 
 definePageMeta({
   title: '远程主机管理',
@@ -113,20 +117,20 @@ const hostColumns: TableColumn<RemoteEnvironmentRecord>[] = [
   {
     id: 'title',
     accessorKey: 'title',
-    header: '名称'
+    header: t('remote.name')
   },
   {
     id: 'address',
-    header: '主机地址',
+    header: t('remote.address'),
     cell: ({ row }) => h('span', { class: 'text-sm font-mono' }, `${row.original.host}:${row.original.port || 22}`)
   },
   {
     accessorKey: 'username',
-    header: '用户名'
+    header: t('remote.username')
   },
   {
     id: 'auth',
-    header: '认证方式',
+    header: t('remote.authMethod'),
     cell: ({ row }) =>
       h(
         UBadge as any,
@@ -136,37 +140,37 @@ const hostColumns: TableColumn<RemoteEnvironmentRecord>[] = [
         },
         {
           default: () =>
-            row.original.auth?.type === 'privateKey' ? '密钥认证' : '密码认证',
+            row.original.auth?.type === 'privateKey' ? t('remote.privateKeyAuth') : t('remote.passwordAuth'),
         },
       )
   },
   {
     id: 'status',
-    header: '测试状态',
+    header: t('remote.testStatus'),
     cell: ({ row }) => {
       const env = row.original
       if (!env.lastTestAt) {
         return h(
           'span',
           { class: 'text-sm text-gray-500 dark:text-gray-400' },
-          '未测试',
+          t('remote.notTested'),
         )
       }
 
       let color: string = 'gray'
-      let label: string = '未知'
+      let label: string = t('remote.statusUnknown')
 
       if (env.lastTestStatus === 'ok') {
         color = 'success'
-        label = '正常'
+        label = t('remote.statusNormal')
       }
       else if (env.lastTestStatus === 'timeout') {
         color = 'warning'
-        label = '超时'
+        label = t('remote.statusTimeout')
       }
       else if (env.lastTestStatus === 'error') {
         color = 'error'
-        label = '失败'
+        label = t('remote.statusError')
       }
 
       const latencyText =
@@ -192,11 +196,11 @@ const hostColumns: TableColumn<RemoteEnvironmentRecord>[] = [
   },
   {
     id: 'actions',
-    header: () => h('div', { class: 'text-right' }, '操作'),
+    header: () => h('div', { class: 'text-right' }, t('remote.actions')),
     cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', icon: 'i-heroicons-arrow-path', loading: testingConnections.value[row.original.id], onClick: () => handleTestConnection(row.original.id) }, { default: () => '测试连接' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openHostModal(row.original) }, { default: () => '编辑' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: testingConnections.value[row.original.id], onClick: () => handleDeleteHost(row.original) }, { default: () => '删除' })
+      h(UButton as any, { size: 'xs', variant: 'ghost', icon: 'i-heroicons-arrow-path', loading: testingConnections.value[row.original.id], onClick: () => handleTestConnection(row.original.id) }, { default: () => t('remote.testConnection') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openHostModal(row.original) }, { default: () => t('common.edit') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: testingConnections.value[row.original.id], onClick: () => handleDeleteHost(row.original) }, { default: () => t('common.delete') })
     ])
   }
 ]
@@ -248,8 +252,8 @@ const handleConfirmDelete = async () => {
     confirmLoading.value = true
     await deleteEnvironment(confirmDialog.value.host.id)
     toast.add({
-      title: '删除成功',
-      description: `主机 "${confirmDialog.value.host.title}" 已删除`,
+      title: t('remote.deleteSuccess'),
+      description: t('remote.hostDeleted', { name: confirmDialog.value.host.title }),
       color: 'success',
       icon: 'i-heroicons-check-circle',
     })
@@ -257,7 +261,7 @@ const handleConfirmDelete = async () => {
   }
   catch (error: any) {
     toast.add({
-      title: '删除失败',
+      title: t('remote.deleteError'),
       description: error.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
@@ -275,15 +279,15 @@ const handleTestConnection = async (id: string) => {
     const result = await testConnection(id)
     if (result.ok) {
       toast.add({
-        title: '连接成功',
-        description: `延迟: ${result.latencyMs}`,
+        title: t('remote.testSuccess'),
+        description: `${t('remote.latency')}: ${result.latencyMs}ms`,
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
     }
     else {
       toast.add({
-        title: '连接失败',
+        title: t('remote.testFailed'),
         description: result.error,
         color: 'error',
         icon: 'i-heroicons-x-circle',
@@ -292,8 +296,8 @@ const handleTestConnection = async (id: string) => {
   }
   catch (err: any) {
     toast.add({
-      title: '连接测试失败',
-      description: err?.message || '连接测试失败',
+      title: t('remote.testError'),
+      description: err?.message || t('remote.testError'),
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
     })

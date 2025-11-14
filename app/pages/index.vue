@@ -1,36 +1,38 @@
 <script setup lang="ts">
+const { t } = useI18n()
+
 definePageMeta({
   title: 'AI Switch - 首页',
 })
 
-const quickLinks = [
+const quickLinks = computed(() => [
   {
-    label: '管理 Claude 环境',
-    description: '本地 ~/.claude / Claude Code 设置一站式维护',
+    label: t('home.manageClaude'),
+    description: t('home.manageClaudeDesc'),
     to: '/claude',
     icon: 'i-lucide-bot',
   },
   {
-    label: '管理 Codex 环境',
-    description: '统一管理 ~/.codex、MCP 与余额查询配置',
+    label: t('home.manageCodex'),
+    description: t('home.manageCodexDesc'),
     to: '/codex',
     icon: 'i-lucide-hexagon',
   },
   {
-    label: '管理远程主机',
-    description: '通过 SSH 管理远程服务器上的 AI 配置',
+    label: t('home.manageRemote'),
+    description: t('home.manageRemoteDesc'),
     to: '/remote',
     icon: 'i-lucide-server',
   },
-]
+])
 
-const coreFeatures = [
-  '环境配置管理：创建、编辑、激活多个环境',
-  'MCP 服务管理：灵活配置与启用 / 禁用',
-  '余额查询：自动请求并展示 API 余额',
-  '远程操作：通过 SSH 连接远程主机进行配置',
-  '通用配置：可复用的配置片段系统',
-]
+const coreFeatures = computed(() => [
+  t('home.feature1'),
+  t('home.feature2'),
+  t('home.feature3'),
+  t('home.feature4'),
+  t('home.feature5'),
+])
 </script>
 
 <template>
@@ -50,21 +52,20 @@ const coreFeatures = [
         <div class="flex-1 space-y-4">
           <div class="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-medium text-neutral-700 ring-1 ring-primary-200/60 dark:bg-neutral-900/70 dark:text-neutral-200 dark:ring-primary-500/40">
             <span class="inline-flex h-1.5 w-1.5 rounded-full bg-primary-500" />
-            <span>环境 / MCP / 远程 主机，一站式切换</span>
+            <span>{{ t('home.tagline') }}</span>
           </div>
 
           <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-            <span class="block text-neutral-900 dark:text-white">AI Switch</span>
+            <span class="block text-neutral-900 dark:text-white">{{ t('home.heroTitle') }}</span>
             <span
               class="mt-2 bg-gradient-to-r from-primary-500 via-emerald-500 to-sky-500 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl"
             >
-              面向开发者的 AI 环境控制台
+              {{ t('home.heroSubtitle') }}
             </span>
           </h1>
 
           <p class="max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
-            将分散在本地和远程服务器上的 AI 配置集中起来：统一管理 Claude / Codex 环境、MCP
-            服务、余额查询与通用配置，让日常切环境像切标签页一样轻松。
+            {{ t('home.heroDescription') }}
           </p>
         </div>
       </div>
@@ -74,10 +75,10 @@ const coreFeatures = [
     <section class="space-y-4">
       <div class="flex items-center justify-between gap-2">
         <h2 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-          快速进入
+          {{ t('home.quickAccess') }}
         </h2>
         <p class="text-xs text-neutral-500 dark:text-neutral-400">
-          常用三个入口，支持在顶部导航随时切换
+          {{ t('home.quickAccessDesc') }}
         </p>
       </div>
 
@@ -111,7 +112,7 @@ const coreFeatures = [
               class="mt-1"
               block
             >
-              进入管理
+              {{ t('home.enterManagement') }}
             </UButton>
           </div>
         </UCard>
@@ -127,7 +128,7 @@ const coreFeatures = [
           <UIcon name="i-lucide-settings-2" class="h-3.5 w-3.5" />
         </div>
         <h2 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-          核心能力一览
+          {{ t('home.coreFeatures') }}
         </h2>
       </div>
 

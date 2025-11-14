@@ -3,21 +3,21 @@
     <!-- 基本信息 -->
     <div class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="名称 / 标题" name="title" required>
+        <UFormField :label="t('claude.form.titleLabel')" name="title" required>
           <UInput
             v-model="formState.title"
-            placeholder="例如:生产环境"
+            :placeholder="t('claude.form.titlePlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
           />
         </UFormField>
 
-        <UFormField label="官网地址" name="homepage">
+        <UFormField :label="t('claude.form.homepageLabel')" name="homepage">
           <UInput
             v-model="formState.homepage"
             type="url"
-            placeholder="https://example.com"
+            :placeholder="t('claude.form.homepagePlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
@@ -25,10 +25,10 @@
         </UFormField>
       </div>
 
-      <UFormField label="描述" name="description">
+      <UFormField :label="t('claude.form.descriptionLabel')" name="description">
         <UTextarea
           v-model="formState.description"
-          placeholder="用于说明适用场景或特殊配置"
+          :placeholder="t('claude.form.descriptionPlaceholder')"
           :rows="4"
           :disabled="submitting"
           class="w-full"
@@ -36,21 +36,21 @@
       </UFormField>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="请求地址（ANTHROPIC_BASE_URL）" name="requestUrl" required>
+        <UFormField :label="t('claude.form.requestUrlLabel')" name="requestUrl" required>
           <UInput
             v-model="formState.requestUrl"
-            placeholder="https://api.anthropic.com"
+            :placeholder="t('claude.form.requestUrlPlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
           />
         </UFormField>
 
-        <UFormField label="API KEY（ANTHROPIC_AUTH_TOKEN）" name="apiKey" required>
+        <UFormField :label="t('claude.form.apiKeyLabel')" name="apiKey" required>
           <UInput
             v-model="formState.apiKey"
             type="password"
-            placeholder="sk-ant-..."
+            :placeholder="t('claude.form.apiKeyPlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
@@ -62,16 +62,16 @@
     <!-- Claude Code 配置 -->
     <div class="space-y-3">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Claude Code 配置</h3>
+        <h3 class="text-lg font-semibold">{{ t('claude.form.codeConfigTitle') }}</h3>
         <div class="flex items-center gap-3">
           <UCheckbox
             v-model="formState.writeToCommon"
-            label="写入通用配置"
+            :label="t('claude.form.writeToCommon')"
             :disabled="submitting"
             size="lg"
           />
           <UButton size="xs" variant="ghost" @click="openCommonConfig">
-            通用配置管理
+            {{ t('claude.generalConfigManagement') }}
           </UButton>
         </div>
       </div>
@@ -86,10 +86,10 @@
 
     <!-- 余额查询配置(可选) -->
     <UCollapsible class="flex flex-col gap-2 w-full">
-    
+
       <UButton
         class="group"
-        label="余额配置"
+        :label="t('claude.form.balanceConfigTitle')"
         color="neutral"
         variant="link"
         icon="i-lucide-chevron-down"
@@ -99,10 +99,10 @@
     />
       <template #content>
         <div class="space-y-4 p-4">
-          <UFormField label="余额请求 URL" name="balanceUrl">
+          <UFormField :label="t('claude.form.balanceUrlLabel')" name="balanceUrl">
             <UInput
               v-model="formState.balanceUrl"
-              placeholder="https://api.example.com/balance"
+              :placeholder="t('claude.form.balanceUrlPlaceholder')"
               :disabled="submitting"
               size="lg"
               class="w-full"
@@ -110,24 +110,24 @@
           </UFormField>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField label="HTTP 方法" name="balanceMethod">
+            <UFormField :label="t('claude.form.httpMethodLabel')" name="balanceMethod">
               <USelect
                 v-model="formState.balanceMethod"
                 :items="[
                   { label: 'GET', value: 'GET' },
                   { label: 'POST', value: 'POST' },
                 ]"
-                placeholder="选择方法"
+                :placeholder="t('claude.form.httpMethodPlaceholder')"
                 :disabled="submitting"
                 size="lg"
                 class="w-full"
               />
             </UFormField>
 
-            <UFormField label="JSON 提取路径" name="balanceJsonPath">
+            <UFormField :label="t('claude.form.jsonPathLabel')" name="balanceJsonPath">
               <UInput
                 v-model="formState.balanceJsonPath"
-                placeholder="data.balance.remaining"
+                :placeholder="t('claude.form.jsonPathPlaceholder')"
                 :disabled="submitting"
                 size="lg"
                 class="w-full"
@@ -135,17 +135,17 @@
             </UFormField>
           </div>
 
-          <UFormField label="请求头(JSON 格式,支持 {{apiKey}} 占位符)" name="balanceHeaders">
+          <UFormField :label="t('claude.form.headersLabel')" name="balanceHeaders">
             <UTextarea
               v-model="formState.balanceHeaders"
               class="w-full"
               :rows="4"
-              placeholder='{"authorization": "Bearer {{apiKey}}"}'
+              :placeholder="t('claude.form.headersPlaceholder')"
               :disabled="submitting"
             />
           </UFormField>
 
-          <UFormField label="请求体(支持 {{apiKey}} 占位符)" name="balanceBody">
+          <UFormField :label="t('claude.form.bodyLabel')" name="balanceBody">
             <UTextarea
               v-model="formState.balanceBody"
               :rows="4"
@@ -153,10 +153,10 @@
             />
           </UFormField>
 
-          <UFormField label="计算公式(变量: value)" name="balanceFormula">
+          <UFormField :label="t('claude.form.formulaLabel')" name="balanceFormula">
             <UInput
               v-model="formState.balanceFormula"
-              placeholder="value / 1000000"
+              :placeholder="t('claude.form.formulaPlaceholder')"
               :disabled="submitting"
               size="lg"
               class="w-full"
@@ -181,6 +181,8 @@
 
 <script setup lang="ts">
 import type { ClaudeEnvironmentRecord } from '#shared/types/claude'
+
+const { t } = useI18n()
 
 interface Props {
   initialValue?: ClaudeEnvironmentRecord
@@ -319,7 +321,7 @@ const handleSubmit = async () => {
   formError.value = undefined
 
   if (codeError.value) {
-    formError.value = '请修复 JSON 配置错误'
+    formError.value = t('claude.form.fixJsonError')
     return
   }
 
@@ -336,7 +338,7 @@ const handleSubmit = async () => {
         balanceHeaders = JSON.parse(formState.balanceHeaders)
       }
       catch {
-        throw new Error('余额查询请求头 JSON 格式错误')
+        throw new Error(t('claude.form.balanceHeadersError'))
       }
     }
 
@@ -371,8 +373,8 @@ const handleSubmit = async () => {
     if (isEditMode.value) {
       savedRecord = await updateEnvironment(props.initialValue!.id, payload)
       toast.add({
-        title: '更新成功',
-        description: `环境 "${formState.title}" 已更新`,
+        title: t('claude.form.updateSuccess'),
+        description: t('claude.form.environmentUpdated', { name: formState.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -380,8 +382,8 @@ const handleSubmit = async () => {
     else {
       savedRecord = await createEnvironment(payload)
       toast.add({
-        title: '创建成功',
-        description: `环境 "${formState.title}" 已创建`,
+        title: t('claude.form.createSuccess'),
+        description: t('claude.form.environmentCreated', { name: formState.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -391,7 +393,7 @@ const handleSubmit = async () => {
     emit('close')
   }
   catch (error: any) {
-    formError.value = error.message || '操作失败'
+    formError.value = error.message || t('claude.form.operationFailed')
   }
   finally {
     submitting.value = false

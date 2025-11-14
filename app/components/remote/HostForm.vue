@@ -2,20 +2,20 @@
   <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <UFormField  label="主机名称" name="title" required>
+      <UFormField  :label="t('remote.hostForm.titleLabel')" name="title" required>
         <UInput
           v-model="formState.title"
-          placeholder="例如: 生产服务器"
+          :placeholder="t('remote.hostForm.titlePlaceholder')"
           :disabled="submitting"
           size="lg"
           class="w-full"
         />
       </UFormField >
 
-      <UFormField  label="描述" name="description">
+      <UFormField  :label="t('remote.hostForm.descriptionLabel')" name="description">
         <UTextarea
           v-model="formState.description"
-          placeholder="关于此主机的说明"
+          :placeholder="t('remote.hostForm.descriptionPlaceholder')"
           :rows="2"
           :disabled="submitting"
           class="w-full"
@@ -23,21 +23,21 @@
       </UFormField >
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <UFormField  label="主机地址" name="host" required class="md:col-span-2">
+        <UFormField  :label="t('remote.hostForm.hostLabel')" name="host" required class="md:col-span-2">
           <UInput
             v-model="formState.host"
-            placeholder="example.com 或 192.168.1.100"
+            :placeholder="t('remote.hostForm.hostPlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
           />
         </UFormField >
 
-        <UFormField  label="端口" name="port" required>
+        <UFormField  :label="t('remote.hostForm.portLabel')" name="port" required>
           <UInput
             v-model.number="formState.port"
             type="number"
-            placeholder="22"
+            :placeholder="t('remote.hostForm.portPlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
@@ -45,10 +45,10 @@
         </UFormField >
       </div>
 
-      <UFormField  label="用户名" name="username" required>
+      <UFormField  :label="t('remote.hostForm.usernameLabel')" name="username" required>
           <UInput
             v-model="formState.username"
-            placeholder="root"
+            :placeholder="t('remote.hostForm.usernamePlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
@@ -58,29 +58,29 @@
 
     <!-- 认证方式 -->
     <div class="space-y-4">
-      <UFormField  label="认证方式" name="authType" required>
+      <UFormField  :label="t('remote.hostForm.authMethodLabel')" name="authType" required>
         <USelect
           class="w-full"
           v-model="formState.authType"
           :items="[
-            { label: '密码认证', value: 'password' },
-            { label: '密钥认证', value: 'privateKey' },
+            { label: t('remote.passwordAuth'), value: 'password' },
+            { label: t('remote.privateKeyAuth'), value: 'privateKey' },
           ]"
           :disabled="submitting"
         />
       </UFormField >
 
       <!-- 密码认证 -->
-      <UFormField 
+      <UFormField
         v-if="formState.authType === 'password'"
-        label="密码"
+        :label="t('remote.hostForm.passwordLabel')"
         name="password"
         required
       >
         <UInput
           v-model="formState.password"
           type="password"
-          placeholder="输入 SSH 密码"
+          :placeholder="t('remote.hostForm.passwordPlaceholder')"
           :disabled="submitting"
           size="lg"
           class="w-full"
@@ -89,37 +89,31 @@
 
       <!-- 密钥认证 -->
       <template v-else>
-        <UFormField  label="私钥路径" name="privateKeyPath">
+        <UFormField  :label="t('remote.hostForm.privateKeyPathLabel')" name="privateKeyPath">
           <UInput
             v-model="formState.privateKeyPath"
-            placeholder="~/.ssh/id_rsa"
+            :placeholder="t('remote.hostForm.privateKeyPathPlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
           />
-          <template #help>
-            <span class="text-xs text-gray-500">留空则使用私钥内容</span>
-          </template>
         </UFormField >
 
-        <UFormField  label="私钥内容" name="privateKey">
+        <UFormField  :label="t('remote.hostForm.privateKeyContentLabel')" name="privateKey">
           <UTextarea
             v-model="formState.privateKey"
-            placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"
+            :placeholder="t('remote.hostForm.privateKeyContentPlaceholder')"
             :rows="6"
             :disabled="submitting"
             class="w-full"
           />
-          <template #help>
-            <span class="text-xs text-gray-500">如果提供了私钥路径,此项可留空</span>
-          </template>
         </UFormField >
 
-        <UFormField  label="密钥密码(可选)" name="passphrase">
+        <UFormField  :label="t('remote.hostForm.passphraseLabel')" name="passphrase">
           <UInput
             v-model="formState.passphrase"
             type="password"
-            placeholder="如果私钥有密码保护"
+            :placeholder="t('remote.hostForm.passphrasePlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
@@ -143,6 +137,8 @@
 
 <script setup lang="ts">
 import type { RemoteEnvironmentRecord } from '#shared/types/remote'
+
+const { t } = useI18n()
 
 interface Props {
   initialValue?: RemoteEnvironmentRecord
@@ -181,27 +177,27 @@ const handleSubmit = async () => {
 
   // 验证
   if (!formState.title.trim()) {
-    formError.value = '主机名称不能为空'
+    formError.value = t('remote.hostForm.titleRequired')
     return
   }
 
   if (!formState.host.trim()) {
-    formError.value = '主机地址不能为空'
+    formError.value = t('remote.hostForm.hostRequired')
     return
   }
 
   if (!formState.username.trim()) {
-    formError.value = '用户名不能为空'
+    formError.value = t('remote.hostForm.usernameRequired')
     return
   }
 
   if (formState.authType === 'password' && !formState.password) {
-    formError.value = '请输入密码'
+    formError.value = t('remote.hostForm.passwordRequired')
     return
   }
 
   if (formState.authType === 'privateKey' && !formState.privateKeyPath && !formState.privateKey) {
-    formError.value = '请提供私钥路径或私钥内容'
+    formError.value = t('remote.hostForm.privateKeyRequired')
     return
   }
 
@@ -227,8 +223,8 @@ const handleSubmit = async () => {
     if (isEditMode.value) {
       await updateEnvironment(props.initialValue!.id, payload)
       toast.add({
-        title: '更新成功',
-        description: `主机 "${formState.title}" 已更新`,
+        title: t('remote.hostForm.updateSuccess'),
+        description: t('remote.hostForm.hostUpdated', { title: formState.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -236,8 +232,8 @@ const handleSubmit = async () => {
     else {
       await createEnvironment(payload)
       toast.add({
-        title: '添加成功',
-        description: `主机 "${formState.title}" 已添加`,
+        title: t('remote.hostForm.createSuccess'),
+        description: t('remote.hostForm.hostCreated', { title: formState.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -246,7 +242,7 @@ const handleSubmit = async () => {
     emit('close')
   }
   catch (error: any) {
-    formError.value = error.message || '操作失败'
+    formError.value = error.message || t('remote.hostForm.operationFailed')
   }
   finally {
     submitting.value = false

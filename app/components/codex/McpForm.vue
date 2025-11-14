@@ -2,34 +2,34 @@
   <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <UFormField label="服务名称(唯一标识符)" name="name" required>
+      <UFormField :label="t('codex.mcpForm.serviceNameLabel')" name="name" required>
         <UInput
           v-model="formState.name"
-          placeholder="例如: my-mcp-server"
+          :placeholder="t('codex.mcpForm.serviceNamePlaceholder')"
           :disabled="submitting || isEditMode"
           size="lg"
           class="w-full"
         />
         <template #help>
-          <span class="text-xs text-gray-500">创建后不可修改</span>
+          <span class="text-xs text-gray-500">{{ t('codex.mcpForm.serviceNameHelp') }}</span>
         </template>
       </UFormField>
 
-      <UFormField label="显示名称" name="displayName">
+      <UFormField :label="t('codex.mcpForm.displayNameLabel')" name="displayName">
         <UInput
           v-model="formState.displayName"
-          placeholder="例如: 我的 MCP 服务"
+          :placeholder="t('codex.mcpForm.displayNamePlaceholder')"
           :disabled="submitting"
           size="lg"
           class="w-full"
         />
       </UFormField>
 
-      <UFormField label="文档链接" name="docUrl">
+      <UFormField :label="t('codex.mcpForm.docUrlLabel')" name="docUrl">
         <UInput
           v-model="formState.docUrl"
           type="url"
-          placeholder="https://example.com/docs"
+          :placeholder="t('codex.mcpForm.docUrlPlaceholder')"
           :disabled="submitting"
           size="lg"
           class="w-full"
@@ -38,14 +38,14 @@
 
       <UCheckbox
         v-model="formState.enabled"
-        label="启用此 MCP 服务"
+        :label="t('codex.mcpForm.enableService')"
         :disabled="submitting"
       />
     </div>
 
     <!-- MCP 配置（TOML） -->
     <div class="space-y-3">
-      <h3 class="text-lg font-semibold">MCP 配置 (TOML)</h3>
+      <h3 class="text-lg font-semibold">{{ t('codex.mcpForm.mcpConfigTitle') }} (TOML)</h3>
       <SharedCodeEditor
         v-model="mcpToml"
         language="toml"
@@ -75,6 +75,7 @@ interface Props { initialValue?: CodexMcpRecord }
 const props = defineProps<Props>()
 const emit = defineEmits<{ close: [] }>()
 
+const { t } = useI18n()
 const { upsertMcpServer } = useCodexStore()
 const toast = useToast()
 
@@ -96,11 +97,11 @@ const handleSubmit = async () => {
   formError.value = undefined
 
   if (!formState.name.trim()) {
-    formError.value = '服务名称不能为空'
+    formError.value = t('codex.mcpForm.serviceNameRequired')
     return
   }
   if (!mcpToml.value.trim()) {
-    formError.value = '请填写 MCP TOML 配置'
+    formError.value = t('codex.mcpForm.fixMcpJsonError')
     return
   }
 
@@ -118,14 +119,16 @@ const handleSubmit = async () => {
     await upsertMcpServer(payload)
 
     toast.add({
-      title: isEditMode.value ? '更新成功' : '创建成功',
-      description: `MCP 服务 "${formState.displayName || formState.name}" 已${isEditMode.value ? '更新' : '创建'}`,
+      title: isEditMode.value ? t('codex.form.updateSuccess') : t('codex.form.createSuccess'),
+      description: isEditMode.value
+        ? t('codex.mcpForm.mcpUpdated', { name: formState.displayName || formState.name })
+        : t('codex.mcpForm.mcpCreated', { name: formState.displayName || formState.name }),
       color: 'success',
       icon: 'i-heroicons-check-circle',
     })
     emit('close')
   } catch (error: any) {
-    formError.value = error.message || '操作失败'
+    formError.value = error.message || t('codex.form.operationFailed')
   } finally {
     submitting.value = false
   }

@@ -3,13 +3,13 @@
     <!-- 页头 -->
     <div class="mb-8">
       <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-        Codex 环境
+        {{ t('codex.environment') }}
       </p>
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 class="text-4xl font-bold">Codex 控制面板</h1>
+          <h1 class="text-4xl font-bold">{{ t('codex.pageTitle') }}</h1>
           <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            读取 ~/.codex 配置,集中管理环境
+            {{ t('codex.pageSubtitle') }}
           </p>
         </div>
         <div class="flex items-center gap-3">
@@ -20,14 +20,14 @@
             option-attribute="label"
             size="sm"
             class="min-w-[160px]"
-            placeholder="选择环境范围"
+            :placeholder="t('codex.selectScope')"
           />
           <UButton
             icon="i-heroicons-cog-6-tooth"
             variant="outline"
             @click="openGeneralModal"
           >
-            通用配置管理
+            {{ t('codex.generalConfigManagement') }}
           </UButton>
         </div>
       </div>
@@ -38,19 +38,19 @@
       <template #header>
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-xl font-semibold">环境管理</h2>
+            <h2 class="text-xl font-semibold">{{ t('codex.environmentManagement') }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              编辑、删除或一键启用配置
+              {{ t('codex.environmentManagementDesc') }}
             </p>
           </div>
           <UButton icon="i-heroicons-plus" @click="openEnvModal()">
-            新增
+            {{ t('codex.add') }}
           </UButton>
         </div>
       </template>
 
       <div v-if="environments.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        暂无环境,请先创建。
+        {{ t('codex.noEnvironments') }}
       </div>
       <div v-else>
         <UTable :data="environments" :columns="envColumns" sticky class="flex-1 h-100" />
@@ -62,39 +62,39 @@
       <template #header>
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-xl font-semibold">MCP 列表</h2>
+            <h2 class="text-xl font-semibold">{{ t('codex.mcpList') }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              管理 Codex 配置中的 MCP 服务
+              {{ t('codex.mcpListDesc') }}
             </p>
           </div>
           <UButton icon="i-heroicons-plus" @click="openMcpModal()">
-            新增
+            {{ t('codex.add') }}
           </UButton>
         </div>
       </template>
 
       <div v-if="mcpServers.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        暂无 MCP 配置。
+        {{ t('codex.noMcpServers') }}
       </div>
       <div v-else>
         <UTable :data="mcpServers" :columns="mcpColumns"  sticky class="flex-1 h-60"/>
       </div>
     </UCard>
 
-    <!-- MCP 表单模态框（对齐“新增环境”布局） -->
-    <UModal v-model:open="mcpModalOpen" :title="editingMcp ? '编辑 MCP' : '新增 MCP'" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
+    <!-- MCP 表单模态框（对齐"新增环境"布局） -->
+    <UModal v-model:open="mcpModalOpen" :title="editingMcp ? t('codex.editMcp') : t('codex.addMcp')" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
       <template #body>
         <CodexMcpForm ref="mcpFormRef" :initial-value="editingMcp" @close="closeMcpModal" />
       </template>
       <template #footer>
-        <UButton variant="outline" @click="closeMcpModal">取消</UButton>
+        <UButton variant="outline" @click="closeMcpModal">{{ t('common.cancel') }}</UButton>
         <UButton :loading="mcpFormRef?.isSubmitting?.()" :disabled="mcpFormRef?.hasCodeError?.()" @click="mcpFormRef?.submit()">
-          {{ mcpFormRef?.isEdit?.() ? '保存修改' : '创建 MCP' }}
+          {{ mcpFormRef?.isEdit?.() ? t('codex.saveChanges') : t('codex.createMcp') }}
         </UButton>
       </template>
     </UModal>
     <!-- 环境表单模态框 -->
-    <UModal v-model:open="envModalOpen" :title="editingEnv && !envFormTreatAsNew ? '编辑环境' : '新增环境'" :ui="{ content: 'sm:max-w-5xl w-full', footer: 'justify-end' }">
+    <UModal v-model:open="envModalOpen" :title="editingEnv && !envFormTreatAsNew ? t('codex.editEnvironment') : t('codex.createEnvironment')" :ui="{ content: 'sm:max-w-5xl w-full', footer: 'justify-end' }">
       <template #body>
         <CodexEnvironmentForm
           ref="envFormRef"
@@ -106,15 +106,15 @@
         />
       </template>
       <template #footer>
-        <UButton variant="outline" @click="closeEnvModal">取消</UButton>
+        <UButton variant="outline" @click="closeEnvModal">{{ t('common.cancel') }}</UButton>
         <UButton :loading="envFormRef?.isSubmitting?.()" :disabled="envFormRef?.hasCodeError?.()" @click="envFormRef?.submit()">
-          {{ envFormRef?.isEdit?.() ? '保存修改' : '新增环境' }}
+          {{ envFormRef?.isEdit?.() ? t('codex.saveChanges') : t('codex.createEnvironment') }}
         </UButton>
       </template>
     </UModal>
 
     <!-- 通用配置管理（置于末尾以获得更高层级） -->
-    <UModal v-model:open="generalModalOpen" title="通用配置管理" :ui="{ content: 'sm:max-w-4xl w-full', footer: 'justify-end' }">
+    <UModal v-model:open="generalModalOpen" :title="t('codex.generalConfigManagement')" :ui="{ content: 'sm:max-w-4xl w-full', footer: 'justify-end' }">
       <template #body>
         <CodexGeneralConfigForm
           ref="generalFormRef"
@@ -122,9 +122,9 @@
         />
       </template>
       <template #footer>
-        <UButton variant="outline" @click="closeGeneralModal">取消</UButton>
+        <UButton variant="outline" @click="closeGeneralModal">{{ t('common.cancel') }}</UButton>
         <UButton :loading="generalFormRef?.isSubmitting?.()" :disabled="generalFormRef?.hasCodeError?.()" @click="onSaveGeneral()">
-          保存
+          {{ t('common.save') }}
         </UButton>
       </template>
     </UModal>
@@ -135,16 +135,16 @@
         <UCard class="max-h-[85dvh] overflow-y-auto">
           <template #header>
             <h3 class="text-xl font-semibold">
-              {{ confirmDialog.mode === 'env' ? '删除环境' : '删除 MCP' }}
+              {{ confirmDialog.mode === 'env' ? t('codex.deleteEnvironment') : t('codex.deleteMcp') }}
             </h3>
           </template>
 
           <p class="mb-6 text-gray-700 dark:text-gray-300">
-            确认删除 "{{
-              confirmDialog.mode === 'env'
-                ? confirmDialog.env?.title || '未命名环境'
+            {{ t('codex.deleteConfirmMessage', {
+              name: confirmDialog.mode === 'env'
+                ? confirmDialog.env?.title || t('codex.unnamedEnvironment')
                 : confirmDialog.mcp?.displayName || confirmDialog.mcp?.name
-            }}" 吗?此操作不可恢复。
+            }) }}
           </p>
 
           <div class="flex justify-end gap-3">
@@ -153,14 +153,14 @@
               :disabled="confirmLoading"
               @click="closeConfirmDialog"
             >
-              取消
+              {{ t('common.cancel') }}
             </UButton>
             <UButton
               color="red"
               :loading="confirmLoading"
               @click="handleConfirmDelete"
             >
-              确认删除
+              {{ t('codex.confirmDelete') }}
             </UButton>
           </div>
         </UCard>
@@ -176,7 +176,7 @@
         <UCard class="flex items-center gap-3">
           <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
           <span class="text-sm text-gray-700 dark:text-gray-200">
-            数据请求中,请稍候...
+            {{ t('codex.loading') }}
           </span>
         </UCard>
       </div>
@@ -188,6 +188,8 @@
 import { h, resolveComponent, ref, watch, computed } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { CodexEnvironmentRecord, CodexMcpRecord } from '#shared/types/codex'
+
+const { t } = useI18n()
 
 definePageMeta({
   title: 'Codex 环境管理',
@@ -219,7 +221,7 @@ interface ScopeOption {
 
 const scopeOptions = computed<ScopeOption[]>(() => {
   const options: ScopeOption[] = [
-    { label: '本地环境', value: 'local' },
+    { label: t('codex.localEnvironment'), value: 'local' },
   ]
   for (const env of remoteEnvs.value) {
     options.push({
@@ -257,9 +259,9 @@ const UButton = resolveComponent('UButton')
 const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
   {
     accessorKey: 'title',
-    header: '名称',
+    header: t('codex.name'),
     cell: ({ row }) => h('div', {}, [
-      h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.title || '未命名'),
+      h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.title || t('codex.unnamed')),
       row.original.description
         ? h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 mt-1' }, row.original.description)
         : null
@@ -267,7 +269,7 @@ const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
   },
   {
     accessorKey: 'homepage',
-    header: '官网地址',
+    header: t('codex.homepage'),
     cell: ({ row }) => row.original.homepage
       ? h('a', {
         href: row.original.homepage,
@@ -275,11 +277,11 @@ const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
         rel: 'noreferrer',
         class: 'text-primary hover:underline text-sm'
       }, row.original.homepage)
-      : h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, '未填写')
+      : h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('codex.notProvided'))
   },
   {
     id: 'enabled',
-    header: '启用',
+    header: t('codex.enabled'),
     cell: ({ row }) => h(USwitch as any, {
       modelValue: row.original.status === 'active',
       'onUpdate:modelValue': (val: boolean) => handleToggleEnv(row.original, val),
@@ -290,14 +292,14 @@ const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
   {
     id: 'balance',
     header: () => h('div', { class: 'flex items-center gap-2' }, [
-      h('span', {}, '余额'),
+      h('span', {}, t('codex.balance')),
       h(
         UButton as any,
         {
           size: 'xs',
           variant: 'ghost',
           icon: 'i-heroicons-arrow-path',
-          title: '刷新全部余额',
+          title: t('codex.refreshAllBalances'),
           onClick: () => handleQueryAllBalances(),
           disabled: loading.value,
         }
@@ -306,10 +308,10 @@ const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
     cell: ({ row }) => {
       const env = row.original as CodexEnvironmentRecord
       if (!env.balanceUrl) {
-        return h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, '未配置')
+        return h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('codex.notConfigured'))
       }
       const parts: any[] = []
-      const text = typeof (env as any).currentBalance === 'number' ? `${formatCurrency((env as any).currentBalance)}` : '未查询'
+      const text = typeof (env as any).currentBalance === 'number' ? `${formatCurrency((env as any).currentBalance)}` : t('codex.notQueried')
       parts.push(h('span', { class: 'text-sm' }, text))
       parts.push(
         h(
@@ -318,7 +320,7 @@ const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
             size: 'xs',
             variant: 'ghost',
             icon: 'i-heroicons-arrow-path',
-            title: '刷新余额',
+            title: t('codex.refreshBalance'),
             disabled: loading.value,
             onClick: () => handleQueryBalance(env)
           },
@@ -330,11 +332,11 @@ const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
   },
   {
     id: 'actions',
-    header: () => h('div', { class: 'text-right' }, '操作'),
+    header: () => h('div', { class: 'text-right' }, t('codex.actions')),
     cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal(row.original) }, { default: () => '编辑' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal({ ...row.original, title: `${row.original.title}(副本)` } as CodexEnvironmentRecord, true) }, { default: () => '复制' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.status === 'active', onClick: () => handleDeleteEnv(row.original) }, { default: () => '删除' })
+      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal(row.original) }, { default: () => t('common.edit') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal({ ...row.original, title: `${row.original.title}(副本)` } as CodexEnvironmentRecord, true) }, { default: () => t('codex.copy') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.status === 'active', onClick: () => handleDeleteEnv(row.original) }, { default: () => t('common.delete') })
     ])
   }
 ]
@@ -344,17 +346,17 @@ const USwitch = resolveComponent('USwitch')
 const mcpColumns: TableColumn<CodexMcpRecord>[] = [
   {
     id: 'name',
-    header: '名称',
+    header: t('codex.name'),
     cell: ({ row }) => h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.displayName || row.original.name)
   },
   {
     id: 'doc',
-    header: '文档',
-    cell: ({ row }) => h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 truncate max-w-md' }, row.original.docUrl || '未提供文档链接')
+    header: t('codex.doc'),
+    cell: ({ row }) => h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 truncate max-w-md' }, row.original.docUrl || t('codex.noDocLink'))
   },
   {
     id: 'enabled',
-    header: '启用',
+    header: t('codex.enabled'),
     cell: ({ row }) => h(USwitch as any, {
       modelValue: row.original.enabled,
       'onUpdate:modelValue': (val: boolean) => handleToggleMcp(row.original, val),
@@ -364,10 +366,10 @@ const mcpColumns: TableColumn<CodexMcpRecord>[] = [
   },
   {
     id: 'actions',
-    header: () => h('div', { class: 'text-right' }, '操作'),
+    header: () => h('div', { class: 'text-right' }, t('codex.actions')),
     cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openMcpModal(row.original) }, { default: () => '编辑' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.enabled, onClick: () => handleDeleteMcp(row.original) }, { default: () => '删除' })
+      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openMcpModal(row.original) }, { default: () => t('common.edit') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.enabled, onClick: () => handleDeleteMcp(row.original) }, { default: () => t('common.delete') })
     ])
   }
 ]
@@ -394,17 +396,28 @@ const handleToggleEnv = async (record: CodexEnvironmentRecord, next: boolean) =>
   try {
     if (next) {
       await activateEnvironment(record.id)
+      toast.add({
+        title: t('codex.activateSuccess'),
+        description: t('codex.environmentActivated', { name: record.title }),
+        color: 'success',
+        icon: 'i-heroicons-check-circle',
+      })
     } else {
       // 目前不支持直接禁用
-      useToast().add({
-        title: '无法禁用',
-        description: '请通过启用其他环境来切换。',
+      toast.add({
+        title: t('codex.cannotDisable'),
+        description: t('codex.switchByEnabling'),
         color: 'orange',
         icon: 'i-heroicons-information-circle',
       })
     }
   } catch (err: any) {
-    console.error('切换环境失败:', err.message)
+    toast.add({
+      title: t('codex.operationError'),
+      description: err.message,
+      color: 'error',
+      icon: 'i-heroicons-exclamation-circle',
+    })
   } finally {
     await fetchOverview()
   }
@@ -422,23 +435,23 @@ const handleQueryBalance = async (record: CodexEnvironmentRecord) => {
   try {
     const res = await codexStore.queryBalance(record.id)
     if (res.error) {
-      useToast().add({
-        title: '查询失败',
+      toast.add({
+        title: t('codex.queryError'),
         description: res.error,
         color: 'error',
         icon: 'i-heroicons-exclamation-circle',
       })
     } else {
-      useToast().add({
-        title: '查询成功',
-        description: `余额: ${res.balance} (原始: ${res.raw})`,
+      toast.add({
+        title: t('codex.querySuccess'),
+        description: `${t('codex.balance')}: ${res.balance} (${res.raw})`,
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
     }
   } catch (err: any) {
-    useToast().add({
-      title: '查询失败',
+    toast.add({
+      title: t('codex.queryError'),
       description: err.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
@@ -522,8 +535,8 @@ const handleDeleteEnv = (record: CodexEnvironmentRecord) => {
 const handleDeleteMcp = (record: CodexMcpRecord) => {
   if (record.enabled) {
     toast.add({
-      title: '无法删除',
-      description: '请先禁用 MCP 服务',
+      title: t('codex.cannotDelete'),
+      description: t('codex.disableMcpFirst'),
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
     })
@@ -552,8 +565,8 @@ const handleConfirmDelete = async () => {
     if (confirmDialog.value.mode === 'env' && confirmDialog.value.env) {
       await deleteEnvironment(confirmDialog.value.env.id)
       toast.add({
-        title: '删除成功',
-        description: `环境 "${confirmDialog.value.env.title}" 已删除`,
+        title: t('codex.deleteSuccess'),
+        description: t('codex.environmentDeleted', { name: confirmDialog.value.env.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -561,8 +574,8 @@ const handleConfirmDelete = async () => {
     else if (confirmDialog.value.mode === 'mcp' && confirmDialog.value.mcp) {
       await codexStore.deleteMcpServer(confirmDialog.value.mcp.id)
       toast.add({
-        title: '删除成功',
-        description: `MCP "${confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name}" 已删除`,
+        title: t('codex.deleteSuccess'),
+        description: t('codex.mcpDeleted', { name: confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -572,7 +585,7 @@ const handleConfirmDelete = async () => {
   }
   catch (error: any) {
     toast.add({
-      title: '删除失败',
+      title: t('codex.deleteError'),
       description: error.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',

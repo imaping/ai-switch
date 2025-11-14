@@ -3,13 +3,13 @@
     <!-- 页头 -->
     <div class="mb-8">
       <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-        Claude 环境
+        {{ t('claude.environment') }}
       </p>
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 class="text-4xl font-bold">Claude 控制面板</h1>
+          <h1 class="text-4xl font-bold">{{ t('claude.pageTitle') }}</h1>
           <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            读取 ~/.claude 配置,集中管理环境
+            {{ t('claude.pageSubtitle') }}
           </p>
         </div>
         <div class="flex items-center gap-3">
@@ -20,14 +20,14 @@
             option-attribute="label"
             size="sm"
             class="min-w-[160px]"
-            placeholder="选择环境范围"
+            :placeholder="t('claude.selectScope')"
           />
           <UButton
             icon="i-heroicons-cog-6-tooth"
             variant="outline"
             @click="openGeneralModal"
           >
-            通用配置管理
+            {{ t('claude.generalConfigManagement') }}
           </UButton>
         </div>
       </div>
@@ -38,19 +38,19 @@
       <template #header>
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-xl font-semibold">环境管理</h2>
+            <h2 class="text-xl font-semibold">{{ t('claude.environmentManagement') }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              编辑、删除或一键启用配置
+              {{ t('claude.environmentManagementDesc') }}
             </p>
           </div>
           <UButton icon="i-heroicons-plus" @click="openEnvModal()">
-            新增
+            {{ t('claude.add') }}
           </UButton>
         </div>
       </template>
 
       <div v-if="environments.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        暂无环境,请先创建。
+        {{ t('claude.noEnvironments') }}
       </div>
       <div v-else>
         <UTable :data="environments" :columns="envColumns" sticky class="flex-1 h-100"/>
@@ -62,19 +62,19 @@
       <template #header>
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-xl font-semibold">MCP 列表</h2>
+            <h2 class="text-xl font-semibold">{{ t('claude.mcpList') }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              管理 ~/.claude.json 中的 mcpServers 节点
+              {{ t('claude.mcpListDesc') }}
             </p>
           </div>
           <UButton icon="i-heroicons-plus" @click="openMcpModal()">
-            新增
+            {{ t('claude.add') }}
           </UButton>
         </div>
       </template>
 
       <div v-if="mcpServers.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        暂无 MCP 配置。
+        {{ t('claude.noMcpServers') }}
       </div>
       <div v-else>
         <UTable :data="mcpServers" :columns="mcpColumns" sticky class="flex-1 h-60"/>
@@ -82,7 +82,7 @@
     </UCard>
 
     <!-- 环境表单模态框 -->
-    <UModal v-model:open="envModalOpen" :title="editingEnv && !envFormTreatAsNew ? '编辑环境' : '新增环境'"  :ui="{ content: 'sm:max-w-5xl w-full', footer: 'justify-end' }">
+    <UModal v-model:open="envModalOpen" :title="editingEnv && !envFormTreatAsNew ? t('claude.editEnvironment') : t('claude.createEnvironment')"  :ui="{ content: 'sm:max-w-5xl w-full', footer: 'justify-end' }">
       <template #body>
         <ClaudeEnvironmentForm
           ref="envFormRef"
@@ -97,17 +97,17 @@
         <UButton
           variant="outline"
           @click="closeEnvModal"
-        >取消</UButton>
+        >{{ t('common.cancel') }}</UButton>
         <UButton
           :loading="envFormRef?.isSubmitting?.()"
           :disabled="envFormRef?.hasCodeError?.()"
           @click="envFormRef?.submit()"
-        >{{ envFormRef?.isEdit?.() ? '保存修改' : '新增环境' }}</UButton>
+        >{{ envFormRef?.isEdit?.() ? t('claude.saveChanges') : t('claude.createEnvironment') }}</UButton>
       </template>
     </UModal>
 
     <!-- 通用配置管理 -->
-    <UModal v-model:open="generalModalOpen" title="通用配置管理" :ui="{ content: 'sm:max-w-4xl w-full', footer: 'justify-end' }">
+    <UModal v-model:open="generalModalOpen" :title="t('claude.generalConfigManagement')" :ui="{ content: 'sm:max-w-4xl w-full', footer: 'justify-end' }">
       <template #body>
         <ClaudeGeneralConfigForm
           ref="generalFormRef"
@@ -115,22 +115,22 @@
         />
       </template>
       <template #footer>
-        <UButton variant="outline" @click="closeGeneralModal">取消</UButton>
+        <UButton variant="outline" @click="closeGeneralModal">{{ t('common.cancel') }}</UButton>
         <UButton :loading="generalFormRef?.isSubmitting?.()" :disabled="generalFormRef?.hasCodeError?.()" @click="onSaveGeneral()">
-          保存
+          {{ t('common.save') }}
         </UButton>
       </template>
     </UModal>
 
-    <!-- MCP 表单模态框（对齐“新增环境”布局） -->
-    <UModal v-model:open="mcpModalOpen" :title="editingMcp ? '编辑 MCP' : '新增 MCP'" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
+    <!-- MCP 表单模态框（对齐"新增环境"布局） -->
+    <UModal v-model:open="mcpModalOpen" :title="editingMcp ? t('claude.editMcp') : t('claude.addMcp')" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
       <template #body>
         <ClaudeMcpForm ref="mcpFormRef" :initial-value="editingMcp" @close="closeMcpModal" />
       </template>
       <template #footer>
-        <UButton variant="outline" @click="closeMcpModal">取消</UButton>
+        <UButton variant="outline" @click="closeMcpModal">{{ t('common.cancel') }}</UButton>
         <UButton :loading="mcpFormRef?.isSubmitting?.()" :disabled="mcpFormRef?.hasCodeError?.()" @click="mcpFormRef?.submit()">
-          {{ mcpFormRef?.isEdit?.() ? '保存修改' : '创建 MCP' }}
+          {{ mcpFormRef?.isEdit?.() ? t('claude.saveChanges') : t('claude.createMcp') }}
         </UButton>
       </template>
     </UModal>
@@ -144,7 +144,7 @@
         <UCard class="flex items-center gap-3">
           <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
           <span class="text-sm text-gray-700 dark:text-gray-200">
-            数据请求中,请稍候...
+            {{ t('claude.loading') }}
           </span>
         </UCard>
       </div>
@@ -156,16 +156,16 @@
         <UCard class="max-h-[85dvh] overflow-y-auto">
           <template #header>
             <h3 class="text-xl font-semibold">
-              {{ confirmDialog.mode === 'env' ? '删除环境' : '删除 MCP' }}
+              {{ confirmDialog.mode === 'env' ? t('claude.deleteEnvironment') : t('claude.deleteMcp') }}
             </h3>
           </template>
 
           <p class="mb-6 text-gray-700 dark:text-gray-300">
-            确认删除 "{{
-              confirmDialog.mode === 'env'
-                ? confirmDialog.env?.title || '未命名环境'
+            {{ t('claude.deleteConfirmMessage', {
+              name: confirmDialog.mode === 'env'
+                ? confirmDialog.env?.title || t('claude.unnamedEnvironment')
                 : confirmDialog.mcp?.displayName || confirmDialog.mcp?.name
-            }}" 吗?此操作不可恢复。
+            }) }}
           </p>
 
           <div class="flex justify-end gap-3">
@@ -174,14 +174,14 @@
               :disabled="confirmLoading"
               @click="closeConfirmDialog"
             >
-              取消
+              {{ t('common.cancel') }}
             </UButton>
             <UButton
               color="red"
               :loading="confirmLoading"
               @click="handleConfirmDelete"
             >
-              确认删除
+              {{ t('claude.confirmDelete') }}
             </UButton>
           </div>
         </UCard>
@@ -194,6 +194,8 @@
 import { h, resolveComponent, ref, watch, computed } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { ClaudeEnvironmentRecord, ClaudeMcpRecord } from '#shared/types/claude'
+
+const { t } = useI18n()
 
 definePageMeta({
   title: 'Claude 环境管理',
@@ -233,7 +235,7 @@ interface ScopeOption {
 // 本地 + 远程主机列表，用于面板内环境下拉
 const scopeOptions = computed<ScopeOption[]>(() => {
   const options: ScopeOption[] = [
-    { label: '本地环境', value: 'local' },
+    { label: t('claude.localEnvironment'), value: 'local' },
   ]
   for (const env of remoteEnvs.value) {
     options.push({
@@ -260,9 +262,9 @@ const UButton = resolveComponent('UButton')
 const envColumns: TableColumn<ClaudeEnvironmentRecord>[] = [
   {
     accessorKey: 'title',
-    header: '名称',
+    header: t('claude.name'),
     cell: ({ row }) => h('div', {}, [
-      h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.title || '未命名'),
+      h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.title || t('claude.unnamed')),
       row.original.description
         ? h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 mt-1' }, row.original.description)
         : null
@@ -270,7 +272,7 @@ const envColumns: TableColumn<ClaudeEnvironmentRecord>[] = [
   },
   {
     accessorKey: 'homepage',
-    header: '官网地址',
+    header: t('claude.homepage'),
     cell: ({ row }) => row.original.homepage
       ? h('a', {
         href: row.original.homepage,
@@ -278,11 +280,11 @@ const envColumns: TableColumn<ClaudeEnvironmentRecord>[] = [
         rel: 'noreferrer',
         class: 'text-primary hover:underline text-sm'
       }, row.original.homepage)
-      : h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, '未填写')
+      : h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('claude.notProvided'))
   },
   {
     id: 'enabled',
-    header: '启用',
+    header: t('claude.enabled'),
     cell: ({ row }) => h(USwitch as any, {
       modelValue: row.original.status === 'active',
       'onUpdate:modelValue': (val: boolean) => handleToggleEnv(row.original, val),
@@ -293,14 +295,14 @@ const envColumns: TableColumn<ClaudeEnvironmentRecord>[] = [
   {
     id: 'balance',
     header: () => h('div', { class: 'flex items-center gap-2' }, [
-      h('span', {}, '余额'),
+      h('span', {}, t('claude.balance')),
       h(
         UButton as any,
         {
           size: 'xs',
           variant: 'ghost',
           icon: 'i-heroicons-arrow-path',
-          title: '刷新全部余额',
+          title: t('claude.refreshAllBalances'),
           onClick: () => handleQueryAllBalances(),
           disabled: loading.value,
         }
@@ -309,12 +311,12 @@ const envColumns: TableColumn<ClaudeEnvironmentRecord>[] = [
     cell: ({ row }) => {
       const env = row.original
       if (!env.balanceUrl) {
-        return h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, '未配置')
+        return h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('claude.notConfigured'))
       }
       const parts: any[] = []
-      const text = typeof env.currentBalance === 'number' ? `${formatCurrency(env.currentBalance)}` : '未查询'
+      const text = typeof env.currentBalance === 'number' ? `${formatCurrency(env.currentBalance)}` : t('claude.notQueried')
       parts.push(h('span', { class: 'text-sm' }, text))
-    
+
       parts.push(
         h(
           UButton as any,
@@ -322,7 +324,7 @@ const envColumns: TableColumn<ClaudeEnvironmentRecord>[] = [
             size: 'xs',
             variant: 'ghost',
             icon: 'i-heroicons-arrow-path',
-            title: '刷新余额',
+            title: t('claude.refreshBalance'),
             disabled: loading.value,
             onClick: () => handleQueryBalance(env)
           },
@@ -334,11 +336,11 @@ const envColumns: TableColumn<ClaudeEnvironmentRecord>[] = [
   },
   {
     id: 'actions',
-    header: () => h('div', { class: 'text-right' }, '操作'),
+    header: () => h('div', { class: 'text-right' }, t('claude.actions')),
     cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal(row.original) }, { default: () => '编辑' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal({ ...row.original, title: `${row.original.title}(副本)` }, true) }, { default: () => '复制' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.status === 'active', onClick: () => handleDeleteEnv(row.original) }, { default: () => '删除' })
+      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal(row.original) }, { default: () => t('common.edit') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal({ ...row.original, title: `${row.original.title}(副本)` }, true) }, { default: () => t('claude.copy') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.status === 'active', onClick: () => handleDeleteEnv(row.original) }, { default: () => t('common.delete') })
     ])
   }
 ]
@@ -348,17 +350,17 @@ const USwitch = resolveComponent('USwitch')
 const mcpColumns: TableColumn<ClaudeMcpRecord>[] = [
   {
     id: 'name',
-    header: '名称',
+    header: t('claude.name'),
     cell: ({ row }) => h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.displayName || row.original.name)
   },
   {
     id: 'doc',
-    header: '文档',
-    cell: ({ row }) => h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 truncate max-w-md' }, row.original.docUrl || '未提供文档链接')
+    header: t('claude.doc'),
+    cell: ({ row }) => h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 truncate max-w-md' }, row.original.docUrl || t('claude.noDocLink'))
   },
   {
     id: 'enabled',
-    header: '启用',
+    header: t('claude.enabled'),
     cell: ({ row }) => h(USwitch as any, {
       modelValue: row.original.enabled,
       'onUpdate:modelValue': (val: boolean) => handleToggleMcp(row.original, val),
@@ -368,10 +370,10 @@ const mcpColumns: TableColumn<ClaudeMcpRecord>[] = [
   },
   {
     id: 'actions',
-    header: () => h('div', { class: 'text-right' }, '操作'),
+    header: () => h('div', { class: 'text-right' }, t('claude.actions')),
     cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openMcpModal(row.original) }, { default: () => '编辑' }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.enabled, onClick: () => handleDeleteMcp(row.original) }, { default: () => '删除' })
+      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openMcpModal(row.original) }, { default: () => t('common.edit') }),
+      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.enabled, onClick: () => handleDeleteMcp(row.original) }, { default: () => t('common.delete') })
     ])
   }
 ]
@@ -455,8 +457,8 @@ const handleDeleteEnv = (record: ClaudeEnvironmentRecord) => {
 const handleDeleteMcp = (record: ClaudeMcpRecord) => {
   if (record.enabled) {
     toast.add({
-      title: '无法删除',
-      description: '请先禁用 MCP 服务',
+      title: t('claude.cannotDelete'),
+      description: t('claude.disableMcpFirst'),
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
     })
@@ -485,8 +487,8 @@ const handleConfirmDelete = async () => {
     if (confirmDialog.value.mode === 'env' && confirmDialog.value.env) {
       await deleteEnvironment(confirmDialog.value.env.id)
       toast.add({
-        title: '删除成功',
-        description: `环境 "${confirmDialog.value.env.title}" 已删除`,
+        title: t('claude.deleteSuccess'),
+        description: t('claude.environmentDeleted', { name: confirmDialog.value.env.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -494,8 +496,8 @@ const handleConfirmDelete = async () => {
     else if (confirmDialog.value.mode === 'mcp' && confirmDialog.value.mcp) {
       await deleteMcpServer(confirmDialog.value.mcp.id)
       toast.add({
-        title: '删除成功',
-        description: `MCP "${confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name}" 已删除`,
+        title: t('claude.deleteSuccess'),
+        description: t('claude.mcpDeleted', { name: confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -505,7 +507,7 @@ const handleConfirmDelete = async () => {
   }
   catch (error: any) {
     toast.add({
-      title: '删除失败',
+      title: t('claude.deleteError'),
       description: error.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
@@ -521,15 +523,15 @@ const handleActivateEnv = async (record: ClaudeEnvironmentRecord) => {
   try {
     await activateEnvironment(record.id)
     toast.add({
-      title: '激活成功',
-      description: `环境 "${record.title}" 已激活`,
+      title: t('claude.activateSuccess'),
+      description: t('claude.environmentActivated', { name: record.title }),
       color: 'success',
       icon: 'i-heroicons-check-circle',
     })
   }
   catch (err: any) {
     toast.add({
-      title: '激活失败',
+      title: t('claude.activateError'),
       description: err.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
@@ -543,23 +545,23 @@ const handleToggleEnv = async (record: ClaudeEnvironmentRecord, next: boolean) =
       // 切到激活
       await activateEnvironment(record.id)
       toast.add({
-        title: '激活成功',
-        description: `环境 "${record.title}" 已激活`,
+        title: t('claude.activateSuccess'),
+        description: t('claude.environmentActivated', { name: record.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
     } else {
       // 目前不支持直接禁用，提示用户
       toast.add({
-        title: '无法禁用',
-        description: '请通过启用其他环境来切换。',
+        title: t('claude.cannotDisable'),
+        description: t('claude.switchByEnabling'),
         color: 'orange',
         icon: 'i-heroicons-information-circle',
       })
     }
   } catch (err: any) {
     toast.add({
-      title: '操作失败',
+      title: t('claude.operationError'),
       description: err.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
@@ -573,16 +575,18 @@ const handleToggleEnv = async (record: ClaudeEnvironmentRecord, next: boolean) =
 const handleToggleMcp = async (record: ClaudeMcpRecord, next?: boolean) => {
   try {
     await toggleMcpServer(record.id, typeof next === 'boolean' ? next : !record.enabled)
+    const name = record.displayName || record.name
+    const statusKey = !record.enabled ? 'mcpEnabled' : 'mcpDisabled'
     toast.add({
-      title: '操作成功',
-      description: `MCP "${record.displayName || record.name}" 已${!record.enabled ? '启用' : '禁用'}`,
+      title: t('claude.operationSuccess'),
+      description: t(`claude.${statusKey}`, { name }),
       color: 'success',
       icon: 'i-heroicons-check-circle',
     })
   }
   catch (err: any) {
     toast.add({
-      title: '操作失败',
+      title: t('claude.operationError'),
       description: err.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',
@@ -603,22 +607,22 @@ const handleQueryBalance = async (record: ClaudeEnvironmentRecord) => {
     const res = await claudeStore.queryBalance(record.id)
     if (res.error) {
       toast.add({
-        title: '查询失败',
+        title: t('claude.queryError'),
         description: res.error,
         color: 'error',
         icon: 'i-heroicons-exclamation-circle',
       })
     } else {
       toast.add({
-        title: '查询成功',
-        description: `余额: ${formatCurrency(res.balance)}`,
+        title: t('claude.querySuccess'),
+        description: `${t('claude.balance')}: ${formatCurrency(res.balance)}`,
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
     }
   } catch (err: any) {
     toast.add({
-      title: '查询失败',
+      title: t('claude.queryError'),
       description: err.message,
       color: 'error',
       icon: 'i-heroicons-exclamation-circle',

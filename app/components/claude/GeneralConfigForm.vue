@@ -1,7 +1,7 @@
 <template>
   <UForm class="space-y-6" @submit.prevent>
     <div class="space-y-3">
-      <h3 class="text-lg font-semibold">通用配置 (JSON)</h3>
+      <h3 class="text-lg font-semibold">{{ t('claude.generalConfigForm.title') }}</h3>
 
       <SharedCodeEditor
         v-model="jsonText"
@@ -24,6 +24,8 @@
 <script setup lang="ts">
 import { useClaudeStore } from '~/stores/claude'
 import TOML from "@iarna/toml";
+
+const { t } = useI18n()
 
 interface Props {
   initialValue?: Record<string, unknown>
@@ -48,14 +50,14 @@ const submit = async () => {
   try {
     content = JSON.parse(jsonText.value)
   } catch (e: any) {
-    codeError.value = e?.message || 'JSON 解析失败'
+    codeError.value = e?.message || t('claude.generalConfigForm.jsonParseError')
     return
   }
 
   await store.updateGeneralConfig(content)
   toast.add({
-    title: '保存成功',
-    description: '通用配置已更新',
+    title: t('claude.generalConfigForm.saveSuccess'),
+    description: t('claude.generalConfigForm.configUpdated'),
     color: 'success',
     icon: 'i-heroicons-check-circle',
   })

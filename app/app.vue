@@ -3,20 +3,21 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
 const appConfig = useAppConfig()
+const { t } = useI18n()
 
 const items = computed<NavigationMenuItem[]>(() => [
   {
-    label: 'Claude',
+    label: t('nav.claude'),
     to: '/claude',
     active: route.path.startsWith('/claude')
   },
   {
-    label: 'Codex',
+    label: t('nav.codex'),
     to: '/codex',
     active: route.path.startsWith('/codex')
   },
   {
-    label: '远程管理',
+    label: t('nav.remote'),
     to: '/remote',
     active: route.path.startsWith('/remote')
   }
@@ -27,7 +28,7 @@ const version = appConfig.version
 
 <template>
   <UApp>
-    <UHeader title="AI SWITCH">
+    <UHeader :title="t('app.title')">
 
       <template #right>
         <UNavigationMenu :items="items" />
@@ -47,7 +48,7 @@ const version = appConfig.version
     <UFooter>
       <template #left>
         <p class="text-muted text-sm">
-          Copyright © {{ new Date().getFullYear() }} · v{{ version }}
+          {{ t('footer.copyright') }} © {{ new Date().getFullYear() }} · v{{ version }}
         </p>
       </template>
 
@@ -60,6 +61,7 @@ const version = appConfig.version
           target="_blank"
           aria-label="GitHub"
         />
+        <SharedLanguageSwitcher />
       </template>
     </UFooter>
   </UApp>

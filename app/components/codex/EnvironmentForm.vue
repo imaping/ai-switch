@@ -3,21 +3,21 @@
     <!-- 基本信息 -->
     <div class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="名称 / 标题" name="title" required>
+        <UFormField :label="t('codex.form.titleLabel')" name="title" required>
           <UInput
             v-model="formState.title"
-            placeholder="例如:生产环境"
+            :placeholder="t('codex.form.titlePlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
           />
         </UFormField>
 
-        <UFormField label="官网地址" name="homepage">
+        <UFormField :label="t('codex.form.homepageLabel')" name="homepage">
           <UInput
             v-model="formState.homepage"
             type="url"
-            placeholder="https://example.com"
+            :placeholder="t('codex.form.homepagePlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
@@ -25,10 +25,10 @@
         </UFormField>
       </div>
 
-      <UFormField label="描述" name="description">
+      <UFormField :label="t('codex.form.descriptionLabel')" name="description">
         <UTextarea
           v-model="formState.description"
-          placeholder="用于说明适用场景或特殊配置"
+          :placeholder="t('codex.form.descriptionPlaceholder')"
           :rows="4"
           :disabled="submitting"
           class="w-full"
@@ -46,11 +46,11 @@
           />
         </UFormField>
 
-        <UFormField label="API KEY" name="apiKey" required>
+        <UFormField :label="t('codex.form.apiKeyLabel')" name="apiKey" required>
           <UInput
             v-model="formState.apiKey"
             type="password"
-            placeholder="sk-..."
+            :placeholder="t('codex.form.apiKeyPlaceholder')"
             :disabled="submitting"
             size="lg"
             class="w-full"
@@ -62,11 +62,11 @@
     <!-- Codex 配置（TOML） -->
     <div class="space-y-3">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Codex 配置 (TOML)</h3>
+        <h3 class="text-lg font-semibold">{{ t('codex.form.codeConfigTitle') }} (TOML)</h3>
         <div class="flex items-center gap-3">
-          <UCheckbox v-model="formState.writeToCommon" label="写入通用配置" :disabled="submitting" />
+          <UCheckbox v-model="formState.writeToCommon" :label="t('codex.form.writeToCommon')" :disabled="submitting" />
           <UButton size="xs" variant="ghost" @click="openGeneralConfig">
-            通用配置管理
+            {{ t('codex.generalConfigManagement') }}
           </UButton>
         </div>
       </div>
@@ -83,7 +83,7 @@
     <UCollapsible class="flex flex-col gap-2 w-full">
       <UButton
         class="group"
-        label="余额配置"
+        :label="t('codex.form.balanceConfigTitle')"
         color="neutral"
         variant="link"
         icon="i-lucide-chevron-down"
@@ -93,10 +93,10 @@
       />
       <template #content>
         <div class="space-y-4 p-4">
-          <UFormField label="余额请求 URL" name="balanceUrl">
+          <UFormField :label="t('codex.form.balanceUrlLabel')" name="balanceUrl">
             <UInput
               v-model="formState.balanceUrl"
-              placeholder="https://api.example.com/balance"
+              :placeholder="t('codex.form.balanceUrlPlaceholder')"
               :disabled="submitting"
               size="lg"
               class="w-full"
@@ -104,24 +104,24 @@
           </UFormField>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField label="HTTP 方法" name="balanceMethod">
+            <UFormField :label="t('codex.form.httpMethodLabel')" name="balanceMethod">
               <USelect
                 v-model="formState.balanceMethod"
                 :items="[
                   { label: 'GET', value: 'GET' },
                   { label: 'POST', value: 'POST' },
                 ]"
-                placeholder="选择方法"
+                :placeholder="t('codex.form.httpMethodPlaceholder')"
                 :disabled="submitting"
                 size="lg"
                 class="w-full"
               />
             </UFormField>
 
-            <UFormField label="JSON 提取路径" name="balanceJsonPath">
+            <UFormField :label="t('codex.form.jsonPathLabel')" name="balanceJsonPath">
               <UInput
                 v-model="formState.balanceJsonPath"
-                placeholder="data.balance.remaining"
+                :placeholder="t('codex.form.jsonPathPlaceholder')"
                 :disabled="submitting"
                 size="lg"
                 class="w-full"
@@ -129,17 +129,17 @@
             </UFormField>
           </div>
 
-          <UFormField label="请求头(JSON 格式,支持 {{apiKey}} 占位符)" name="balanceHeaders">
+          <UFormField :label="t('codex.form.headersLabel')" name="balanceHeaders">
             <UTextarea
               v-model="formState.balanceHeaders"
               class="w-full"
               :rows="4"
-              placeholder='{"authorization": "Bearer {{apiKey}}"}'
+              :placeholder="t('codex.form.headersPlaceholder')"
               :disabled="submitting"
             />
           </UFormField>
 
-          <UFormField label="请求体(支持 {{apiKey}} 占位符)" name="balanceBody">
+          <UFormField :label="t('codex.form.bodyLabel')" name="balanceBody">
             <UTextarea
               v-model="formState.balanceBody"
               :rows="4"
@@ -148,10 +148,10 @@
             />
           </UFormField>
 
-          <UFormField label="计算公式(变量: value)" name="balanceFormula">
+          <UFormField :label="t('codex.form.formulaLabel')" name="balanceFormula">
             <UInput
               v-model="formState.balanceFormula"
-              placeholder="value / 1000000"
+              :placeholder="t('codex.form.formulaPlaceholder')"
               :disabled="submitting"
               size="lg"
               class="w-full"
@@ -186,6 +186,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{ close: []; 'open-general': []; saved: [record: CodexEnvironmentRecord] }>()
 
+const { t } = useI18n()
 const codexStore = useCodexStore()
 const { createEnvironment, updateEnvironment } = codexStore
 const toast = useToast()
@@ -231,7 +232,7 @@ const handleSubmit = async () => {
         balanceHeaders = JSON.parse(formState.balanceHeaders)
       }
       catch {
-        throw new Error('余额查询请求头 JSON 格式错误')
+        throw new Error(t('codex.form.balanceHeadersError'))
       }
     }
 
@@ -265,8 +266,8 @@ const handleSubmit = async () => {
     if (isEditMode.value) {
       savedRecord = await updateEnvironment(props.initialValue!.id, payload)
       toast.add({
-        title: '更新成功',
-        description: `环境 "${formState.title}" 已更新`,
+        title: t('codex.form.updateSuccess'),
+        description: t('codex.form.environmentUpdated', { name: formState.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -274,8 +275,8 @@ const handleSubmit = async () => {
     else {
       savedRecord = await createEnvironment(payload)
       toast.add({
-        title: '创建成功',
-        description: `环境 "${formState.title}" 已创建`,
+        title: t('codex.form.createSuccess'),
+        description: t('codex.form.environmentCreated', { name: formState.title }),
         color: 'success',
         icon: 'i-heroicons-check-circle',
       })
@@ -285,7 +286,7 @@ const handleSubmit = async () => {
     emit('close')
   }
   catch (error: any) {
-    formError.value = error.message || '操作失败'
+    formError.value = error.message || t('codex.form.operationFailed')
   }
   finally {
     submitting.value = false

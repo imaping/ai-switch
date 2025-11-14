@@ -2,34 +2,34 @@
   <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <UFormField  label="服务名称(唯一标识符)" name="name" required>
+      <UFormField  :label="t('claude.mcpForm.serviceNameLabel')" name="name" required>
         <UInput
           v-model="formState.name"
-          placeholder="例如: my-mcp-server"
+          :placeholder="t('claude.mcpForm.serviceNamePlaceholder')"
           :disabled="submitting || isEditMode"
           size="lg"
           class="w-full"
         />
         <template #help>
-          <span class="text-xs text-gray-500">创建后不可修改</span>
+          <span class="text-xs text-gray-500">{{ t('claude.mcpForm.serviceNameHelp') }}</span>
         </template>
       </UFormField >
 
-      <UFormField  label="显示名称" name="displayName">
+      <UFormField  :label="t('claude.mcpForm.displayNameLabel')" name="displayName">
         <UInput
           v-model="formState.displayName"
-          placeholder="例如: 我的 MCP 服务"
+          :placeholder="t('claude.mcpForm.displayNamePlaceholder')"
           :disabled="submitting"
           size="lg"
           class="w-full"
         />
       </UFormField >
 
-      <UFormField  label="文档链接" name="docUrl">
+      <UFormField  :label="t('claude.mcpForm.docUrlLabel')" name="docUrl">
         <UInput
           v-model="formState.docUrl"
           type="url"
-          placeholder="https://example.com/docs"
+          :placeholder="t('claude.mcpForm.docUrlPlaceholder')"
           :disabled="submitting"
           size="lg"
           class="w-full"
@@ -38,16 +38,16 @@
 
       <UCheckbox
         v-model="formState.enabled"
-        label="启用此 MCP 服务"
+        :label="t('claude.mcpForm.enableService')"
         :disabled="submitting"
       />
     </div>
 
     <!-- MCP 配置 -->
     <div class="space-y-3">
-      <h3 class="text-lg font-semibold">MCP 配置</h3>
+      <h3 class="text-lg font-semibold">{{ t('claude.mcpForm.mcpConfigTitle') }}</h3>
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        配置 MCP 服务的命令、参数和环境变量
+        {{ t('claude.mcpForm.mcpConfigDesc') }}
       </p>
 
       <SharedCodeEditor
@@ -73,6 +73,8 @@
 
 <script setup lang="ts">
 import type { ClaudeMcpRecord } from '#shared/types/claude'
+
+const { t } = useI18n()
 
 interface Props {
   initialValue?: ClaudeMcpRecord
@@ -120,12 +122,12 @@ const handleSubmit = async () => {
   formError.value = undefined
 
   if (codeError.value) {
-    formError.value = '请修复 MCP 配置 JSON 错误'
+    formError.value = t('claude.mcpForm.fixMcpJsonError')
     return
   }
 
   if (!formState.name.trim()) {
-    formError.value = '服务名称不能为空'
+    formError.value = t('claude.mcpForm.serviceNameRequired')
     return
   }
 
@@ -149,9 +151,10 @@ const handleSubmit = async () => {
 
     await upsertMcpServer(payload)
 
+    const name = formState.displayName || formState.name
     toast.add({
-      title: isEditMode.value ? '更新成功' : '创建成功',
-      description: `MCP 服务 "${formState.displayName || formState.name}" 已${isEditMode.value ? '更新' : '创建'}`,
+      title: isEditMode.value ? t('claude.form.updateSuccess') : t('claude.form.createSuccess'),
+      description: isEditMode.value ? t('claude.mcpForm.mcpUpdated', { name }) : t('claude.mcpForm.mcpCreated', { name }),
       color: 'success',
       icon: 'i-heroicons-check-circle',
     })
@@ -159,7 +162,7 @@ const handleSubmit = async () => {
     emit('close')
   }
   catch (error: any) {
-    formError.value = error.message || '操作失败'
+    formError.value = error.message || t('claude.form.operationFailed')
   }
   finally {
     submitting.value = false
