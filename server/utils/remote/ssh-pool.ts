@@ -1,4 +1,5 @@
-import type { Client, ConnectConfig } from 'ssh2'
+import type { ConnectConfig } from 'ssh2'
+import { Client } from 'ssh2'
 import fs from 'fs'
 import * as genericPool from 'generic-pool'
 
@@ -52,7 +53,6 @@ export class SshConnectionPool {
     // 创建 factory
     const factory: genericPool.Factory<Client> = {
       create: async () => {
-        const { Client } = await import('ssh2')
         const client = new Client()
 
         const connectConfig: ConnectConfig = {

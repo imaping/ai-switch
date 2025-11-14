@@ -22,11 +22,14 @@ export default defineNuxtConfig({
     externals: {
       inline: []
     },
-    // 不打包这些模块
-    moduleSideEffects: [],
+    // 标记有副作用的模块，确保正确打包
+    moduleSideEffects: ['ssh2', 'cpu-features'],
     alias: {
       // 确保 ssh2 使用原生模块
       ssh2: 'ssh2'
+    },
+    experimental: {
+      wasm: false
     }
   },
 
