@@ -18,18 +18,15 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    // 将 native 模块标记为外部依赖
     externals: {
       inline: []
     },
-    // 标记有副作用的模块，确保正确打包
     moduleSideEffects: ['ssh2', 'cpu-features'],
-    alias: {
-      // 确保 ssh2 使用原生模块
-      ssh2: 'ssh2'
-    },
     experimental: {
       wasm: false
+    },
+    rollupConfig: {
+      external: ['ssh2']
     }
   },
 
