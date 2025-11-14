@@ -2,6 +2,7 @@ import type { ConnectConfig } from 'ssh2'
 import { Client } from 'ssh2'
 import fs from 'fs'
 import * as genericPool from 'generic-pool'
+import { sshPoolLogger } from '../logger'
 
 export interface SshKey {
   id: string // 连接唯一键
@@ -34,6 +35,9 @@ export class SshConnectionPool {
       acquireTimeoutMillis: options.acquireTimeoutMillis ?? 30_000,
       testOnBorrow: options.testOnBorrow ?? true
     }
+    sshPoolLogger.info({
+      defaultOptions: this.defaultOptions
+    }, 'SSH连接池初始化完成')
   }
 
   private getOrCreatePool(
@@ -45,7 +49,12 @@ export class SshConnectionPool {
     const id = makeKey(host, port, username)
 
     let pool = this.pools.get(id)
-    if (pool) return pool
+    if (pool) {
+      sshPoolLogger.debug({ id, poolInfo: this.getPoolInfo(id) }, '复用现有连接池')
+      return pool
+    }
+
+    sshPoolLogger.info({ id, host, port, username }, '创建新的SSH连接池')
 
     // 合并配置选项
     const poolOptions = { ...this.defaultOptions, ...config.poolOptions }
@@ -53,6 +62,9 @@ export class SshConnectionPool {
     // 创建 factory
     const factory: genericPool.Factory<Client> = {
       create: async () => {
+        const startTime = Date.now()
+        sshPoolLogger.debug({ id, host, port, username }, '开始创建SSH连接')
+
         const client = new Client()
 
         const connectConfig: ConnectConfig = {
@@ -67,9 +79,10 @@ export class SshConnectionPool {
         if (!connectConfig.privateKey && (config as any).privateKeyPath) {
           try {
             const p = (config as any).privateKeyPath as string
+            sshPoolLogger.debug({ id, privateKeyPath: p }, '读取私钥文件')
             connectConfig.privateKey = fs.readFileSync(p)
           } catch (e) {
-            // 读取失败，留给下游错误处理
+            sshPoolLogger.error({ id, privateKeyPath: (config as any).privateKeyPath, error: e }, '读取私钥文件失败')
           }
         }
 
@@ -77,10 +90,21 @@ export class SshConnectionPool {
         await new Promise<void>((resolve, reject) => {
           const onReady = () => {
             cleanup()
+            const duration = Date.now() - startTime
+            sshPoolLogger.info({ id, host, port, username, duration }, 'SSH连接建立成功')
             resolve()
           }
           const onError = (err: Error) => {
             cleanup()
+            const duration = Date.now() - startTime
+            sshPoolLogger.error({
+              id, host, port, username, duration,
+              error: {
+                message: err.message,
+                name: err.name,
+                stack: err.stack
+              }
+            }, 'SSH连接建立失败')
             reject(err)
           }
           const cleanup = () => {
@@ -96,22 +120,33 @@ export class SshConnectionPool {
       },
 
       destroy: async (client: Client) => {
+        sshPoolLogger.debug({ id }, '开始销毁SSH连接')
         return new Promise<void>((resolve) => {
-          client.once('close', () => resolve())
+          const timeout = setTimeout(() => {
+            sshPoolLogger.warn({ id }, 'SSH连接销毁超时（5秒），强制完成')
+            resolve()
+          }, 5000)
+
+          client.once('close', () => {
+            clearTimeout(timeout)
+            sshPoolLogger.info({ id }, 'SSH连接已销毁')
+            resolve()
+          })
           client.end()
-          // 设置超时，避免永久等待
-          setTimeout(() => resolve(), 5000)
         })
       },
 
       validate: async (client: Client) => {
         // 检查连接是否仍然有效
         return new Promise<boolean>((resolve) => {
-          if (!(client as any)._sock || !(client as any)._sock.readable) {
-            resolve(false)
-            return
-          }
-          resolve(true)
+          const isValid = !!(client as any)._sock && !!(client as any)._sock.readable
+          sshPoolLogger.debug({
+            id,
+            isValid,
+            hasSocket: !!(client as any)._sock,
+            isReadable: !!(client as any)._sock?.readable
+          }, '验证SSH连接有效性')
+          resolve(isValid)
         })
       }
     }
@@ -126,6 +161,17 @@ export class SshConnectionPool {
       autostart: true
     })
 
+    sshPoolLogger.info({
+      id,
+      poolOptions: {
+        max: poolOptions.max,
+        min: poolOptions.min,
+        idleTimeoutMillis: poolOptions.idleTimeoutMillis,
+        acquireTimeoutMillis: poolOptions.acquireTimeoutMillis,
+        testOnBorrow: poolOptions.testOnBorrow
+      }
+    }, 'SSH连接池创建成功')
+
     this.pools.set(id, pool)
     return pool
   }
@@ -134,9 +180,36 @@ export class SshConnectionPool {
     const host = config.host ?? 'localhost'
     const port = config.port ?? 22
     const username = (config.username ?? '').toString()
+    const id = makeKey(host, port, username)
 
-    const pool = this.getOrCreatePool(host, port, username, config)
-    return await pool.acquire()
+    const startTime = Date.now()
+    sshPoolLogger.debug({ id, host, port, username }, '请求获取SSH连接')
+
+    try {
+      const pool = this.getOrCreatePool(host, port, username, config)
+      const client = await pool.acquire()
+      const duration = Date.now() - startTime
+
+      sshPoolLogger.info({
+        id,
+        duration,
+        poolInfo: this.getPoolInfo(id)
+      }, 'SSH连接获取成功')
+
+      return client
+    } catch (error) {
+      const duration = Date.now() - startTime
+      sshPoolLogger.error({
+        id,
+        duration,
+        error: error instanceof Error ? {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        } : error
+      }, 'SSH连接获取失败')
+      throw error
+    }
   }
 
   async release(client: Client, config: { host?: string; port?: number; username?: string }) {
@@ -145,9 +218,17 @@ export class SshConnectionPool {
     const username = (config.username ?? '').toString()
     const id = makeKey(host, port, username)
 
+    sshPoolLogger.debug({ id }, '释放SSH连接回连接池')
+
     const pool = this.pools.get(id)
     if (pool) {
       await pool.release(client)
+      sshPoolLogger.info({
+        id,
+        poolInfo: this.getPoolInfo(id)
+      }, 'SSH连接已释放')
+    } else {
+      sshPoolLogger.warn({ id }, '未找到对应的连接池，无法释放连接')
     }
   }
 
@@ -164,14 +245,34 @@ export class SshConnectionPool {
     const host = config.host ?? 'localhost'
     const port = config.port ?? 22
     const username = (config.username ?? '').toString()
+    const id = makeKey(host, port, username)
+
+    const startTime = Date.now()
+    sshPoolLogger.debug({ id }, '使用连接池执行操作')
 
     const pool = this.getOrCreatePool(host, port, username, config)
     const client = await pool.acquire()
 
     try {
-      return await callback(client)
+      const result = await callback(client)
+      const duration = Date.now() - startTime
+      sshPoolLogger.debug({ id, duration }, '连接池操作执行成功')
+      return result
+    } catch (error) {
+      const duration = Date.now() - startTime
+      sshPoolLogger.error({
+        id,
+        duration,
+        error: error instanceof Error ? {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        } : error
+      }, '连接池操作执行失败')
+      throw error
     } finally {
       await pool.release(client)
+      sshPoolLogger.debug({ id, poolInfo: this.getPoolInfo(id) }, '连接已归还连接池')
     }
   }
 
@@ -181,9 +282,17 @@ export class SshConnectionPool {
     const username = (config.username ?? '').toString()
     const id = makeKey(host, port, username)
 
+    sshPoolLogger.debug({ id }, '请求销毁SSH连接')
+
     const pool = this.pools.get(id)
     if (pool) {
       await pool.destroy(client)
+      sshPoolLogger.info({
+        id,
+        poolInfo: this.getPoolInfo(id)
+      }, 'SSH连接已从连接池中销毁')
+    } else {
+      sshPoolLogger.warn({ id }, '未找到对应的连接池，无法销毁连接')
     }
   }
 
@@ -193,20 +302,44 @@ export class SshConnectionPool {
 
   async close(id: string) {
     const pool = this.pools.get(id)
-    if (!pool) return
+    if (!pool) {
+      sshPoolLogger.warn({ id }, '未找到对应的连接池，无法关闭')
+      return
+    }
 
+    sshPoolLogger.info({ id, poolInfo: this.getPoolInfo(id) }, '开始关闭SSH连接池')
+
+    const startTime = Date.now()
     await pool.drain()
     await pool.clear()
     this.pools.delete(id)
+
+    const duration = Date.now() - startTime
+    sshPoolLogger.info({ id, duration }, 'SSH连接池已关闭')
   }
 
   async closeAll() {
+    const poolIds = Array.from(this.pools.keys())
+    sshPoolLogger.info({
+      poolCount: poolIds.length,
+      poolIds,
+      allPoolsInfo: this.getAllPoolsInfo()
+    }, '开始关闭所有SSH连接池')
+
+    const startTime = Date.now()
     const closePromises = Array.from(this.pools.entries()).map(async ([id, pool]) => {
       await pool.drain()
       await pool.clear()
       this.pools.delete(id)
+      sshPoolLogger.debug({ id }, 'SSH连接池已关闭')
     })
     await Promise.all(closePromises)
+
+    const duration = Date.now() - startTime
+    sshPoolLogger.info({
+      poolCount: poolIds.length,
+      duration
+    }, '所有SSH连接池已关闭')
   }
 
   // 获取连接池状态信息
