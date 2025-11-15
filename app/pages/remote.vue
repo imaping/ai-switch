@@ -20,7 +20,9 @@
       <template #header>
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-xl font-semibold">{{ t('remote.hostList') }}</h2>
+            <h2 class="text-xl font-semibold">
+              {{ t('remote.hostList') }}
+            </h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {{ t('remote.hostListDesc') }}
             </p>
@@ -38,6 +40,7 @@
         striped
         :data="environments"
         :columns="hostColumns"
+        :loading="hostTableLoading"
         :bordered="false"
         />
     </NCard>
@@ -136,6 +139,7 @@ const { environments } = storeToRefs(remoteStore)
 const { fetchOverview, testConnection, deleteEnvironment } = remoteStore
 
 const message = useMessage()
+const hostTableLoading = ref(false)
 
 // 状态 & 表格列（Naive UI NDataTable）
 const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
@@ -275,8 +279,14 @@ const confirmDialog = ref<{
 const confirmLoading = ref(false)
 
 // 生命周期
-onMounted(() => {
-  fetchOverview()
+onMounted(async () => {
+  hostTableLoading.value = true
+  try {
+    await fetchOverview()
+  }
+  finally {
+    hostTableLoading.value = false
+  }
 })
 
 // 方法

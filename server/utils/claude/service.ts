@@ -304,7 +304,7 @@ export async function updateClaudeEnvironment(
     ...payload,
     codeConfig,
     status: payload.status ?? environments[index].status,
-    createdAt:environments[index].id,
+    createdAt:environments[index].createdAt,
     updatedAt: now
   }
 

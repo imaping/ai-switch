@@ -55,6 +55,7 @@
         striped 
         :data="environments"
         :columns="envColumns"
+        :loading="tableLoading"
         :bordered="false"
       />
     </NCard>
@@ -82,6 +83,7 @@
         striped 
         :data="mcpServers"
         :columns="mcpColumns"
+        :loading="tableLoading"
         :bordered="false"
       />
     </NCard>
@@ -288,6 +290,10 @@ const scopeOptions = computed<ScopeOption[]>(() => {
 })
 
 const selectedScope = ref<string>(envScopeStore.scope)
+const tableLoading = ref(false)
+// 余额刷新 loading（整表 & 单行）
+const balanceAllLoading = ref(false)
+const balanceRowLoading = ref<Record<string, boolean>>({})
 
 // 子表单引用（用于触发提交与读取状态）
 const envFormRef = ref<any>()
@@ -360,10 +366,12 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
         h(
           NButton,
           {
-            quaternary:true,
-            circle:true,
+            quaternary: true,
+            circle: true,
             size: 'tiny',
-            type:'info',
+            type: 'info',
+            loading: balanceAllLoading.value,
+            disabled: balanceAllLoading.value,
             onClick: () => handleQueryAllBalances()
           },
           {
@@ -384,10 +392,12 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
         h(
           NButton,
           {
-            quaternary:true,
-            circle:true,
+            quaternary: true,
+            circle: true,
             size: 'tiny',
-            type:'info',
+            type: 'info',
+            loading: !!balanceRowLoading.value[env.id],
+            disabled: !!balanceRowLoading.value[env.id] || balanceAllLoading.value,
             onClick: () => handleQueryBalance(env)
           },
           {
@@ -538,7 +548,13 @@ onMounted(async () => {
   if (!remoteEnvs.value.length) {
     remoteStore.fetchOverview().catch(() => {})
   }
-  await fetchOverview()
+  tableLoading.value = true
+  try {
+    await fetchOverview()
+  }
+  finally {
+    tableLoading.value = false
+  }
   await handleQueryAllBalances()
 })
 
@@ -546,7 +562,13 @@ onMounted(async () => {
 watch(
   () => envScopeStore.scope,
   async () => {
-    await fetchOverview()
+    tableLoading.value = true
+    try {
+      await fetchOverview()
+    }
+    finally {
+      tableLoading.value = false
+    }
     await handleQueryAllBalances()
   },
 )
@@ -699,6 +721,7 @@ const formatCurrency = (val: number) => {
 }
 
 const handleQueryBalance = async (record: ClaudeEnvironmentRecord) => {
+  balanceRowLoading.value[record.id] = true
   try {
     const res = await claudeStore.queryBalance(record.id)
     if (res.error) {
@@ -710,6 +733,8 @@ const handleQueryBalance = async (record: ClaudeEnvironmentRecord) => {
     }
   } catch (err: any) {
     message.error(err?.message || t('claude.queryError'))
+  } finally {
+    balanceRowLoading.value[record.id] = false
   }
 }
 
@@ -722,10 +747,22 @@ const handleAfterEnvSaved = async (record: ClaudeEnvironmentRecord) => {
 
 const handleQueryAllBalances = async () => {
   const list = environments.value.filter(e => e.balanceUrl)
-  for (const env of list) {
-    try {
-      await claudeStore.queryBalance(env.id)
-    } catch {}
+  if (!list.length) return
+
+  balanceAllLoading.value = true
+  // 批量刷新时只更新数据，不弹出多条消息
+  try {
+    const ids = list.map(env => env.id)
+    ids.forEach(id => { balanceRowLoading.value[id] = true })
+    for (const env of list) {
+      try {
+        await claudeStore.queryBalance(env.id)
+      } catch {}
+    }
+  } finally {
+    const ids = list.map(env => env.id)
+    ids.forEach(id => { balanceRowLoading.value[id] = false })
+    balanceAllLoading.value = false
   }
 }
 </script>

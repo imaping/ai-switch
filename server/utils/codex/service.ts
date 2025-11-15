@@ -440,7 +440,7 @@ export async function updateCodexEnvironment(
     ...payload,
     configToml: normalized.serialized,
     status: payload.status ?? environments[index].status,
-    createdAt:environments[index].id,
+    createdAt:environments[index].createdAt,
     updatedAt: now
   }
 
