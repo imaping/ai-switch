@@ -418,6 +418,7 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
           NButton,
           {
             size: 'small',
+            focusable: false,
             quaternary: true,
             onClick: () => openEnvModal(row)
           },
@@ -428,6 +429,7 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             onClick: () =>
               openEnvModal(
                 { ...row, title: `${row.title || ''}(副本)` } as ClaudeEnvironmentRecord,
@@ -441,6 +443,7 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             type: 'error',
             disabled: row.status === 'active',
             onClick: () => handleDeleteEnv(row)
@@ -507,8 +510,9 @@ const mcpColumns: DataTableColumns<ClaudeMcpRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
+            focusable: false,
             onClick: () => openMcpModal(row)
           },
           { default: () => t('common.edit') }
@@ -516,8 +520,9 @@ const mcpColumns: DataTableColumns<ClaudeMcpRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
+            focusable: false,
             type: 'error',
             disabled: row.enabled,
             onClick: () => handleDeleteMcp(row)

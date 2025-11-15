@@ -238,6 +238,7 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             loading: testingConnections.value[row.id],
             onClick: () => handleTestConnection(row.id)
           },
@@ -248,6 +249,7 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             onClick: () => openHostModal(row)
           },
           { default: () => t('common.edit') }
@@ -257,6 +259,7 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             type: 'error',
             disabled: testingConnections.value[row.id],
             onClick: () => handleDeleteHost(row)

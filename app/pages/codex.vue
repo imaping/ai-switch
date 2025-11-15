@@ -439,6 +439,7 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             onClick: () => openEnvModal(row)
           },
           { default: () => t('common.edit') }
@@ -448,6 +449,7 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             onClick: () =>
               openEnvModal(
                 { ...row, title: `${row.title || ''}(副本)` } as CodexEnvironmentRecord,
@@ -461,6 +463,7 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             type: 'error',
             disabled: row.status === 'active',
             onClick: () => handleDeleteEnv(row)
@@ -529,6 +532,7 @@ const mcpColumns: DataTableColumns<CodexMcpRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             onClick: () => openMcpModal(row)
           },
           { default: () => t('common.edit') }
@@ -538,6 +542,7 @@ const mcpColumns: DataTableColumns<CodexMcpRecord> = [
           {
             size: 'small',
             quaternary: true,
+            focusable: false,
             type: 'error',
             disabled: row.enabled,
             onClick: () => handleDeleteMcp(row)
