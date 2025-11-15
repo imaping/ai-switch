@@ -10,9 +10,11 @@ import {
   NLayoutFooter,
   NLayoutHeader,
   NMessageProvider,
-  NNotificationProvider
+  NNotificationProvider,
+  NMenu
 } from 'naive-ui'
 
+import type { MenuOption } from 'naive-ui'
 const route = useRoute()
 const appConfig = useAppConfig()
 const { t } = useI18n()
@@ -23,21 +25,37 @@ interface NavItem {
   active: boolean
 }
 
-const items = computed<NavItem[]>(() => [
+const items = computed<MenuOption[]>(() => [
   {
-    label: t('nav.claude'),
-    to: '/claude',
-    active: route.path.startsWith('/claude')
-  },
-  {
-    label: t('nav.codex'),
-    to: '/codex',
-    active: route.path.startsWith('/codex')
-  },
-  {
-    label: t('nav.remote'),
-    to: '/remote',
-    active: route.path.startsWith('/remote')
+    label: () =>
+      h(
+        NuxtLink,
+        {
+          to: '/claude'
+        },
+        { default: () => t('nav.claude') }
+      ),
+    key: 'claude'
+  },{
+    label: () =>
+      h(
+        NuxtLink,
+        {
+          to: '/codex'
+        },
+        { default: () => t('nav.codex') }
+      ),
+    key: 'codex'
+  },{
+    label: () =>
+      h(
+        NuxtLink,
+        {
+          to: '/remote'
+        },
+        { default: () => t('nav.remote') }
+      ),
+    key: 'remote'
   }
 ])
 
@@ -51,28 +69,28 @@ const version = appConfig.version
       <n-notification-provider>
         <n-message-provider>
           <n-loading-bar-provider>
-            <n-layout>
+            <n-layout style="min-height: 100vh; display: flex; flex-direction: column;">
               <n-layout-header
                 bordered
-                class="h-14"
+                style="flex-shrink: 0;"
+                class="h-16 flex items-center px-6 bg-white shadow-sm"
               >
-                <div>
-                  {{ t('app.title') }}
+                <div class="w-full max-w-7xl mx-auto flex items-center justify-between">
+                  <NuxtLink
+                    to="/"
+                    class="text-xl font-bold text-gray-800 tracking-tight hover:text-blue-500 transition-colors cursor-pointer"
+                  >
+                    {{ t('app.title') }}
+                  </NuxtLink>
 
-                  <nav >
-                    <NuxtLink
-                      v-for="item in items"
-                      :key="item.to"
-                      :to="item.to"
-                    >
-                      {{ item.label }}
-                    </NuxtLink>
+                  <nav class="flex gap-1">
+                    <n-menu :options="items" mode="horizontal"/>
                   </nav>
                 </div>
               </n-layout-header>
 
               <n-layout-content>
-                <main>
+                <main class="w-full max-w-7xl mx-auto px-6 py-8">
                   <NuxtLayout>
                     <NuxtPage />
                   </NuxtLayout>
@@ -81,26 +99,33 @@ const version = appConfig.version
 
               <n-layout-footer
                 bordered
+                style="flex-shrink: 0;"
+                class="bg-gray-50 border-t border-gray-200"
               >
-                <div>
-                  <p>
-                    {{ t('footer.copyright') }} ©
-                    {{ new Date().getFullYear() }} · v{{ version }}
-                  </p>
+                <div class="w-full max-w-7xl mx-auto px-6 py-6">
+                  <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p class="text-sm text-gray-600">
+                      {{ t('footer.copyright') }} ©
+                      {{ new Date().getFullYear() }} ·
+                      <span class="text-gray-400 ml-1">v{{ version }}</span>
+                    </p>
 
-                  <div>
-                    <NButton
-                      quaternary
-                      size="small"
-                      tag="a"
-                      href="https://github.com/imaping/ai-switch"
-                      target="_blank"
-                      aria-label="GitHub"
-                    >
-                      <span/>
-                      GitHub
-                    </NButton>
-                    <SharedLanguageSwitcher />
+                    <div class="flex items-center gap-3">
+                      <NButton
+                        quaternary
+                        size="small"
+                        tag="a"
+                        href="https://github.com/imaping/ai-switch"
+                        target="_blank"
+                        aria-label="GitHub"
+                        class="text-gray-600! hover:text-gray-900! transition-colors"
+                      >
+                        <span class="i-carbon-logo-github text-lg mr-1"/>
+                        GitHub
+                      </NButton>
+                      <div class="h-4 w-px bg-gray-300"></div>
+                      <SharedLanguageSwitcher />
+                    </div>
                   </div>
                 </div>
               </n-layout-footer>
