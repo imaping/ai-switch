@@ -150,8 +150,6 @@ const pageTransition = computed(() =>
                           <n-icon><LogoGithub /></n-icon>
                         </template>
                       </NButton>
-                      <div class="h-4 w-px bg-gray-300"></div>
-                      <SharedLanguageSwitcher />
                     </div>
                   </div>
                 </div>

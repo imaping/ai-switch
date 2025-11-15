@@ -10,6 +10,26 @@
   "footer": {
     "copyright": "Copyright"
   },
+  "projectSetting": {
+    "title": "Project Settings",
+    "theme": "Theme",
+    "systemTheme": "System Theme",
+    "language": "Language",
+    "uiLanguage": "Interface Language",
+    "animation": "Animation",
+    "enableAnimation": "Enable Animation",
+    "animationType": "Animation Type",
+    "lightTheme": "Light Theme",
+    "darkTheme": "Dark Theme",
+    "animates": {
+      "zoomFade": "Zoom Fade",
+      "zoomOut": "Zoom Out",
+      "fadeSlide": "Fade Slide",
+      "fade": "Fade",
+      "fadeBottom": "Fade From Bottom",
+      "fadeScale": "Fade Scale"
+    }
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

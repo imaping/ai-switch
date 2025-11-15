@@ -10,6 +10,26 @@
   "footer": {
     "copyright": "版权所有"
   },
+  "projectSetting": {
+    "title": "项目配置",
+    "theme": "主题",
+    "systemTheme": "系统主题",
+    "language": "语言",
+    "uiLanguage": "界面语言",
+    "animation": "动画",
+    "enableAnimation": "启用动画",
+    "animationType": "动画类型",
+    "lightTheme": "浅色主题",
+    "darkTheme": "深色主题",
+    "animates": {
+      "zoomFade": "渐变",
+      "zoomOut": "闪现",
+      "fadeSlide": "滑动",
+      "fade": "消退",
+      "fadeBottom": "底部消退",
+      "fadeScale": "缩放消退"
+    }
+  },
   "common": {
     "save": "保存",
     "cancel": "取消",

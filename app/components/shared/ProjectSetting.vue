@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   NButton,
   NDrawer,
@@ -11,22 +11,23 @@ import {
   NTooltip
 } from 'naive-ui'
 import { Checkmark, Moon, SunnySharp, Settings } from '@vicons/ionicons5'
+import { useI18n } from '#imports'
 import { useUiStore } from '~/stores/ui'
 
 const uiStore = useUiStore()
+const { t, locale, locales, setLocale } = useI18n()
 
 const isDrawer = ref(false)
-const title = '项目配置'
-const width = 280
+const width = 320
 
-const animateOptions = [
-  { value: 'zoom-fade', label: '渐变' },
-  { value: 'zoom-out', label: '闪现' },
-  { value: 'fade-slide', label: '滑动' },
-  { value: 'fade', label: '消退' },
-  { value: 'fade-bottom', label: '底部消退' },
-  { value: 'fade-scale', label: '缩放消退' }
-]
+const animateOptions = computed(() => [
+  { value: 'zoom-fade', label: t('projectSetting.animates.zoomFade') },
+  { value: 'zoom-out', label: t('projectSetting.animates.zoomOut') },
+  { value: 'fade-slide', label: t('projectSetting.animates.fadeSlide') },
+  { value: 'fade', label: t('projectSetting.animates.fade') },
+  { value: 'fade-bottom', label: t('projectSetting.animates.fadeBottom') },
+  { value: 'fade-scale', label: t('projectSetting.animates.fadeScale') }
+])
 
 const handleDarkChange = (value: boolean) => {
   uiStore.setThemeMode(value ? 'dark' : 'light')
@@ -43,6 +44,17 @@ const handleAnimateSwitchChange = (value: boolean) => {
 const handleAnimateTypeChange = (value: string) => {
   uiStore.setPageAnimateType(value as any)
 }
+
+const localeOptions = computed(() =>
+  locales.value.map((loc: any) => ({
+    label: (loc as any).name || (loc as any).code,
+    value: loc.code
+  }))
+)
+
+const handleLocaleChange = (value: string) => {
+  setLocale(value)
+}
 </script>
 
 <template>
@@ -51,7 +63,7 @@ const handleAnimateTypeChange = (value: string) => {
       quaternary
       circle
       size="small"
-      aria-label="项目设置"
+      :aria-label="t('projectSetting.title')"
       @click="isDrawer = true"
     >
       <template #icon>
@@ -64,10 +76,10 @@ const handleAnimateTypeChange = (value: string) => {
       :width="width"
       placement="right"
     >
-      <NDrawerContent :title="title" :native-scrollbar="false">
+      <NDrawerContent :title="t('projectSetting.title')" :native-scrollbar="false">
         <div class="space-y-4">
           <NDivider title-placement="center">
-            主题
+            {{ t('projectSetting.theme') }}
           </NDivider>
 
           <div class="flex justify-center">
@@ -90,12 +102,18 @@ const handleAnimateTypeChange = (value: string) => {
                   </template>
                 </NSwitch>
               </template>
-              <span>{{ uiStore.isDark ? '深' : '浅' }}色主题</span>
+              <span>
+                {{
+                  uiStore.isDark
+                    ? t('projectSetting.darkTheme')
+                    : t('projectSetting.lightTheme')
+                }}
+              </span>
             </NTooltip>
           </div>
 
           <NDivider title-placement="center">
-            系统主题
+            {{ t('projectSetting.systemTheme') }}
           </NDivider>
 
           <div class="flex flex-wrap gap-1">
@@ -118,12 +136,30 @@ const handleAnimateTypeChange = (value: string) => {
           </div>
 
           <NDivider title-placement="center">
-            动画
+            {{ t('projectSetting.language') }}
+          </NDivider>
+
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-sm whitespace-nowrap">
+              {{ t('projectSetting.uiLanguage') }}
+            </div>
+            <div class="flex-1">
+              <NSelect
+                size="small"
+                :value="locale"
+                :options="localeOptions"
+                @update:value="handleLocaleChange"
+              />
+            </div>
+          </div>
+
+          <NDivider title-placement="center">
+            {{ t('projectSetting.animation') }}
           </NDivider>
 
           <div class="flex items-center justify-between">
             <div class="text-sm">
-              启用动画
+              {{ t('projectSetting.enableAnimation') }}
             </div>
             <NSwitch
               :value="uiStore.enablePageTransition"
@@ -133,7 +169,7 @@ const handleAnimateTypeChange = (value: string) => {
 
           <div class="flex items-center justify-between gap-3">
             <div class="text-sm whitespace-nowrap">
-              动画类型
+              {{ t('projectSetting.animationType') }}
             </div>
             <div class="flex-1">
               <NSelect
