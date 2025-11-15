@@ -5,7 +5,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <NFormItem :label="t('codex.form.titleLabel')" path="title" :required="true">
           <NInput
-            v-model:model="formState.title"
+            v-model:value="formState.title"
             :placeholder="t('codex.form.titlePlaceholder')"
             :disabled="submitting"
             size="large"
@@ -15,7 +15,7 @@
 
         <NFormItem :label="t('codex.form.homepageLabel')" path="homepage">
           <NInput
-            v-model:model="formState.homepage"
+            v-model:value="formState.homepage"
             :placeholder="t('codex.form.homepagePlaceholder')"
             :disabled="submitting"
             size="large"
@@ -26,7 +26,7 @@
 
       <NFormItem :label="t('codex.form.descriptionLabel')" path="description">
         <NInput
-          v-model:model="formState.description"
+          v-model:value="formState.description"
           :placeholder="t('codex.form.descriptionPlaceholder')"
           type="textarea"
           :rows="4"
@@ -38,7 +38,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <NFormItem label="Base URL" path="baseUrl" :required="true">
           <NInput
-            v-model:model="formState.baseUrl"
+            v-model:value="formState.baseUrl"
             placeholder="https://api.openai.com"
             :disabled="submitting"
             size="large"
@@ -48,7 +48,7 @@
 
         <NFormItem :label="t('codex.form.apiKeyLabel')" path="apiKey" :required="true">
           <NInput
-            v-model:model="formState.apiKey"
+            v-model:value="formState.apiKey"
             type="password"
             :placeholder="t('codex.form.apiKeyPlaceholder')"
             :disabled="submitting"
@@ -91,7 +91,7 @@
         <div class="space-y-4 p-4">
           <NFormItem :label="t('codex.form.balanceUrlLabel')" path="balanceUrl">
             <NInput
-              v-model:model="formState.balanceUrl"
+              v-model:value="formState.balanceUrl"
               :placeholder="t('codex.form.balanceUrlPlaceholder')"
               :disabled="submitting"
               size="large"
@@ -102,7 +102,7 @@
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <NFormItem :label="t('codex.form.httpMethodLabel')" path="balanceMethod">
               <NSelect
-                v-model:model="formState.balanceMethod"
+                v-model:value="formState.balanceMethod"
                 :options="[
                   { label: 'GET', value: 'GET' },
                   { label: 'POST', value: 'POST' }
@@ -115,7 +115,7 @@
 
             <NFormItem :label="t('codex.form.jsonPathLabel')" path="balanceJsonPath">
               <NInput
-                v-model:model="formState.balanceJsonPath"
+                v-model:value="formState.balanceJsonPath"
                 :placeholder="t('codex.form.jsonPathPlaceholder')"
                 :disabled="submitting"
                 size="large"
@@ -126,7 +126,7 @@
 
           <NFormItem :label="t('codex.form.headersLabel')" path="balanceHeaders">
             <NInput
-              v-model:model="formState.balanceHeaders"
+              v-model:value="formState.balanceHeaders"
               type="textarea"
               class="w-full"
               :rows="4"
@@ -137,7 +137,7 @@
 
           <NFormItem :label="t('codex.form.bodyLabel')" path="balanceBody">
             <NInput
-              v-model:model="formState.balanceBody"
+              v-model:value="formState.balanceBody"
               type="textarea"
               :rows="4"
               :disabled="submitting"
@@ -146,7 +146,7 @@
 
           <NFormItem :label="t('codex.form.formulaLabel')" path="balanceFormula">
             <NInput
-              v-model:model="formState.balanceFormula"
+              v-model:value="formState.balanceFormula"
               :placeholder="t('codex.form.formulaPlaceholder')"
               :disabled="submitting"
               size="large"
@@ -238,7 +238,6 @@ const balanceExpanded = ref(false)
 
 // 监听 initialValue 变化，重新初始化表单状态
 watch(() => props.initialValue, (newValue) => {
-  debugger
   if (newValue) {
     Object.assign(formState, initFormState())
     // 同时更新 configToml
@@ -282,7 +281,7 @@ const handleSubmit = async () => {
       baseUrl: formState.baseUrl,
       apiKey: formState.apiKey,
       writeToCommon: formState.writeToCommon,
-      tomlConfig: configToml.value
+      configToml: configToml.value
     }
 
     if (formState.balanceUrl?.trim()) {
