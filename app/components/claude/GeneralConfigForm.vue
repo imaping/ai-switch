@@ -1,5 +1,5 @@
 <template>
-  <UForm class="space-y-6" @submit.prevent>
+  <NForm class="space-y-6" @submit.prevent>
     <div class="space-y-3">
       <h3 class="text-lg font-semibold">{{ t('claude.generalConfigForm.title') }}</h3>
 
@@ -10,18 +10,23 @@
         @error="handleCodeError"
       />
 
-      <UAlert
+      <NAlert
         v-if="codeError"
-        color="red"
-        variant="soft"
-        :title="codeError"
-        icon="i-heroicons-exclamation-circle"
-      />
+        type="error"
+        :show-icon="true"
+      >
+        {{ codeError }}
+      </NAlert>
     </div>
-  </UForm>
+  </NForm>
 </template>
 
 <script setup lang="ts">
+import {
+  NAlert,
+  NForm,
+  useMessage
+} from 'naive-ui'
 import { useClaudeStore } from '~/stores/claude'
 import TOML from "@iarna/toml";
 
@@ -33,7 +38,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const store = useClaudeStore()
-const toast = useToast()
+const message = useMessage()
 
 const codeError = ref<string | null>(null)
 const jsonText = ref<string>(
@@ -55,12 +60,7 @@ const submit = async () => {
   }
 
   await store.updateGeneralConfig(content)
-  toast.add({
-    title: t('claude.generalConfigForm.saveSuccess'),
-    description: t('claude.generalConfigForm.configUpdated'),
-    color: 'success',
-    icon: 'i-heroicons-check-circle',
-  })
+  message.success(t('claude.generalConfigForm.configUpdated'))
 }
 
 defineExpose({

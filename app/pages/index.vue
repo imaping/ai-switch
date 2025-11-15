@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { NButton, NCard } from 'naive-ui'
+
 const { t } = useI18n()
 
 definePageMeta({
@@ -36,13 +38,10 @@ const coreFeatures = computed(() => [
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto py-10 space-y-10">
+  <div class="mx-auto max-w-5xl space-y-10 py-10">
     <!-- Hero 区域 -->
-    <UCard
-      class="relative overflow-hidden"
-      :ui="{
-        base: 'border-0 ring-1 ring-border/60 bg-gradient-to-br from-primary-50/80 to-neutral-50 dark:from-primary-950/40 dark:to-neutral-950/60',
-      }"
+    <NCard
+      class="relative overflow-hidden border-0 bg-gradient-to-br from-primary-50/80 to-neutral-50 ring-1 ring-border/60 dark:from-primary-950/40 dark:to-neutral-950/60"
     >
       <div
         class="pointer-events-none absolute inset-y-0 -right-20 w-64 bg-gradient-to-tl from-primary-500/10 via-primary-400/10 to-transparent blur-3xl"
@@ -69,7 +68,7 @@ const coreFeatures = computed(() => [
           </p>
         </div>
       </div>
-    </UCard>
+    </NCard>
 
     <!-- 快速入口 -->
     <section class="space-y-4">
@@ -83,7 +82,7 @@ const coreFeatures = computed(() => [
       </div>
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <UCard
+        <NCard
           v-for="item in quickLinks"
           :key="item.to"
           class="h-full transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -104,18 +103,17 @@ const coreFeatures = computed(() => [
               {{ item.description }}
             </p>
 
-            <UButton
-              :to="item.to"
-              color="primary"
-              variant="soft"
-              size="xs"
-              class="mt-1"
-              block
+            <NButton
+              type="primary"
+              size="small"
+              class="mt-1 w-full"
+              tag="a"
+              :href="item.to"
             >
               {{ t('home.enterManagement') }}
-            </UButton>
+            </NButton>
           </div>
-        </UCard>
+        </NCard>
       </div>
     </section>
 
@@ -132,11 +130,7 @@ const coreFeatures = computed(() => [
         </h2>
       </div>
 
-      <UCard
-        :ui="{
-          base: 'bg-neutral-50/60 dark:bg-neutral-900/60 border-dashed',
-        }"
-      >
+      <NCard class="border-dashed bg-neutral-50/60 dark:bg-neutral-900/60">
         <ul class="grid gap-3 text-xs text-neutral-700 dark:text-neutral-300 md:grid-cols-2">
           <li
             v-for="(feature, index) in coreFeatures"
@@ -153,7 +147,7 @@ const coreFeatures = computed(() => [
             </span>
           </li>
         </ul>
-      </UCard>
+      </NCard>
     </section>
   </div>
 </template>

@@ -1,141 +1,148 @@
 <template>
-  <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
+  <NForm :model="formState" @submit.prevent="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <UFormField  :label="t('remote.hostForm.titleLabel')" name="title" required>
-        <UInput
+      <NFormItem :label="t('remote.hostForm.titleLabel')" path="title" :required="true">
+        <NInput
           v-model="formState.title"
           :placeholder="t('remote.hostForm.titlePlaceholder')"
           :disabled="submitting"
-          size="lg"
+          size="large"
           class="w-full"
         />
-      </UFormField >
+      </NFormItem>
 
-      <UFormField  :label="t('remote.hostForm.descriptionLabel')" name="description">
-        <UTextarea
+      <NFormItem :label="t('remote.hostForm.descriptionLabel')" path="description">
+        <NInput
           v-model="formState.description"
           :placeholder="t('remote.hostForm.descriptionPlaceholder')"
+          type="textarea"
           :rows="2"
           :disabled="submitting"
           class="w-full"
         />
-      </UFormField >
+      </NFormItem>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <UFormField  :label="t('remote.hostForm.hostLabel')" name="host" required class="md:col-span-2">
-          <UInput
+        <NFormItem :label="t('remote.hostForm.hostLabel')" path="host" :required="true" class="md:col-span-2">
+          <NInput
             v-model="formState.host"
             :placeholder="t('remote.hostForm.hostPlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField >
+        </NFormItem>
 
-        <UFormField  :label="t('remote.hostForm.portLabel')" name="port" required>
-          <UInput
+        <NFormItem :label="t('remote.hostForm.portLabel')" path="port" :required="true">
+          <NInput
             v-model.number="formState.port"
             type="number"
             :placeholder="t('remote.hostForm.portPlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField >
+        </NFormItem>
       </div>
 
-      <UFormField  :label="t('remote.hostForm.usernameLabel')" name="username" required>
-          <UInput
+      <NFormItem :label="t('remote.hostForm.usernameLabel')" path="username" :required="true">
+          <NInput
             v-model="formState.username"
             :placeholder="t('remote.hostForm.usernamePlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-      </UFormField >
+      </NFormItem>
     </div>
 
     <!-- 认证方式 -->
     <div class="space-y-4">
-      <UFormField  :label="t('remote.hostForm.authMethodLabel')" name="authType" required>
-        <USelect
+      <NFormItem :label="t('remote.hostForm.authMethodLabel')" path="authType" :required="true">
+        <NSelect
           class="w-full"
           v-model="formState.authType"
-          :items="[
-            { label: t('remote.passwordAuth'), value: 'password' },
-            { label: t('remote.privateKeyAuth'), value: 'privateKey' },
-          ]"
+          :options="authTypeOptions"
           :disabled="submitting"
         />
-      </UFormField >
+      </NFormItem>
 
       <!-- 密码认证 -->
-      <UFormField
+      <NFormItem
         v-if="formState.authType === 'password'"
         :label="t('remote.hostForm.passwordLabel')"
-        name="password"
+        path="password"
         required
       >
-        <UInput
+        <NInput
           v-model="formState.password"
           type="password"
           :placeholder="t('remote.hostForm.passwordPlaceholder')"
           :disabled="submitting"
-          size="lg"
+          size="large"
           class="w-full"
         />
-      </UFormField >
+      </NFormItem>
 
       <!-- 密钥认证 -->
       <template v-else>
-        <UFormField  :label="t('remote.hostForm.privateKeyPathLabel')" name="privateKeyPath">
-          <UInput
+        <NFormItem :label="t('remote.hostForm.privateKeyPathLabel')" path="privateKeyPath">
+          <NInput
             v-model="formState.privateKeyPath"
             :placeholder="t('remote.hostForm.privateKeyPathPlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField >
+        </NFormItem>
 
-        <UFormField  :label="t('remote.hostForm.privateKeyContentLabel')" name="privateKey">
-          <UTextarea
+        <NFormItem :label="t('remote.hostForm.privateKeyContentLabel')" path="privateKey">
+          <NInput
             v-model="formState.privateKey"
+            type="textarea"
             :placeholder="t('remote.hostForm.privateKeyContentPlaceholder')"
             :rows="6"
             :disabled="submitting"
             class="w-full"
           />
-        </UFormField >
+        </NFormItem>
 
-        <UFormField  :label="t('remote.hostForm.passphraseLabel')" name="passphrase">
-          <UInput
+        <NFormItem :label="t('remote.hostForm.passphraseLabel')" path="passphrase">
+          <NInput
             v-model="formState.passphrase"
             type="password"
             :placeholder="t('remote.hostForm.passphrasePlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField >
+        </NFormItem>
       </template>
     </div>
 
     <!-- 错误提示 -->
-    <UAlert
+    <NAlert
       v-if="formError"
-      color="red"
-      variant="soft"
-      :title="formError"
-      icon="i-heroicons-exclamation-circle"
-    />
+      type="error"
+      :show-icon="true"
+    >
+      {{ formError }}
+    </NAlert>
 
-    <!-- 操作按钮移至父级 UModal.footer -->
-  </UForm>
+    <!-- 操作按钮移至父级弹窗 footer -->
+  </NForm>
 </template>
 
 <script setup lang="ts">
+import {
+  NAlert,
+  NForm,
+  NFormItem,
+  NInput,
+  NSelect,
+  useMessage
+} from 'naive-ui'
 import type { RemoteEnvironmentRecord } from '#shared/types/remote'
 
 const { t } = useI18n()
@@ -151,7 +158,12 @@ const emit = defineEmits<{
 
 import { useRemoteStore } from '~/stores/remote'
 const { createEnvironment, updateEnvironment } = useRemoteStore()
-const toast = useToast()
+const message = useMessage()
+
+const authTypeOptions = computed(() => [
+  { label: t('remote.passwordAuth'), value: 'password' },
+  { label: t('remote.privateKeyAuth'), value: 'privateKey' }
+])
 
 const isEditMode = computed(() => Boolean(props.initialValue))
 
@@ -222,21 +234,15 @@ const handleSubmit = async () => {
 
     if (isEditMode.value) {
       await updateEnvironment(props.initialValue!.id, payload)
-      toast.add({
-        title: t('remote.hostForm.updateSuccess'),
-        description: t('remote.hostForm.hostUpdated', { title: formState.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('remote.hostForm.hostUpdated', { title: formState.title })
+      )
     }
     else {
       await createEnvironment(payload)
-      toast.add({
-        title: t('remote.hostForm.createSuccess'),
-        description: t('remote.hostForm.hostCreated', { title: formState.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('remote.hostForm.hostCreated', { title: formState.title })
+      )
     }
 
     emit('close')

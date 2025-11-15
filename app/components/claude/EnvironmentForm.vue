@@ -1,61 +1,62 @@
 <template>
-  <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
+  <NForm :model="formState" @submit.prevent="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField :label="t('claude.form.titleLabel')" name="title" required>
-          <UInput
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <NFormItem :label="t('claude.form.titleLabel')" path="title" :required="true">
+          <NInput
             v-model="formState.title"
             :placeholder="t('claude.form.titlePlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
 
-        <UFormField :label="t('claude.form.homepageLabel')" name="homepage">
-          <UInput
+        <NFormItem :label="t('claude.form.homepageLabel')" path="homepage">
+          <NInput
             v-model="formState.homepage"
             type="url"
             :placeholder="t('claude.form.homepagePlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
       </div>
 
-      <UFormField :label="t('claude.form.descriptionLabel')" name="description">
-        <UTextarea
+      <NFormItem :label="t('claude.form.descriptionLabel')" path="description">
+        <NInput
           v-model="formState.description"
           :placeholder="t('claude.form.descriptionPlaceholder')"
+          type="textarea"
           :rows="4"
           :disabled="submitting"
           class="w-full"
         />
-      </UFormField>
+      </NFormItem>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField :label="t('claude.form.requestUrlLabel')" name="requestUrl" required>
-          <UInput
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <NFormItem :label="t('claude.form.requestUrlLabel')" path="requestUrl" :required="true">
+          <NInput
             v-model="formState.requestUrl"
             :placeholder="t('claude.form.requestUrlPlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
 
-        <UFormField :label="t('claude.form.apiKeyLabel')" name="apiKey" required>
-          <UInput
+        <NFormItem :label="t('claude.form.apiKeyLabel')" path="apiKey" :required="true">
+          <NInput
             v-model="formState.apiKey"
             type="password"
             :placeholder="t('claude.form.apiKeyPlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
       </div>
     </div>
 
@@ -64,15 +65,15 @@
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold">{{ t('claude.form.codeConfigTitle') }}</h3>
         <div class="flex items-center gap-3">
-          <UCheckbox
+          <NCheckbox
             v-model="formState.writeToCommon"
             :label="t('claude.form.writeToCommon')"
             :disabled="submitting"
-            size="lg"
           />
-          <UButton size="xs" variant="ghost" @click="openCommonConfig">
+          <NButton quaternary size="tiny" @click="openCommonConfig">
+            <span class="i-heroicons-cog-6-tooth mr-1 inline-block h-4 w-4" />
             {{ t('claude.generalConfigManagement') }}
-          </UButton>
+          </NButton>
         </div>
       </div>
 
@@ -85,101 +86,103 @@
     </div>
 
     <!-- 余额查询配置(可选) -->
-    <UCollapsible class="flex flex-col gap-2 w-full">
-
-      <UButton
-        class="group"
-        :label="t('claude.form.balanceConfigTitle')"
-        color="neutral"
-        variant="link"
-        icon="i-lucide-chevron-down"
-      :ui="{
-        leadingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
-      }"
-    />
-      <template #content>
+    <NCollapse class="w-full flex flex-col gap-2" :default-expanded-names="balanceExpanded ? ['balance'] : []" @update:expanded-names="onBalanceExpandedChange">
+      <NCollapseItem :title="t('claude.form.balanceConfigTitle')" name="balance">
         <div class="space-y-4 p-4">
-          <UFormField :label="t('claude.form.balanceUrlLabel')" name="balanceUrl">
-            <UInput
+          <NFormItem :label="t('claude.form.balanceUrlLabel')" path="balanceUrl">
+            <NInput
               v-model="formState.balanceUrl"
               :placeholder="t('claude.form.balanceUrlPlaceholder')"
               :disabled="submitting"
-              size="lg"
+              size="large"
               class="w-full"
             />
-          </UFormField>
+          </NFormItem>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField :label="t('claude.form.httpMethodLabel')" name="balanceMethod">
-              <USelect
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <NFormItem :label="t('claude.form.httpMethodLabel')" path="balanceMethod">
+              <NSelect
                 v-model="formState.balanceMethod"
-                :items="[
+                :options="[
                   { label: 'GET', value: 'GET' },
                   { label: 'POST', value: 'POST' },
                 ]"
                 :placeholder="t('claude.form.httpMethodPlaceholder')"
                 :disabled="submitting"
-                size="lg"
                 class="w-full"
               />
-            </UFormField>
+            </NFormItem>
 
-            <UFormField :label="t('claude.form.jsonPathLabel')" name="balanceJsonPath">
-              <UInput
+            <NFormItem :label="t('claude.form.jsonPathLabel')" path="balanceJsonPath">
+              <NInput
                 v-model="formState.balanceJsonPath"
                 :placeholder="t('claude.form.jsonPathPlaceholder')"
                 :disabled="submitting"
-                size="lg"
+                size="large"
                 class="w-full"
               />
-            </UFormField>
+            </NFormItem>
           </div>
 
-          <UFormField :label="t('claude.form.headersLabel')" name="balanceHeaders">
-            <UTextarea
+          <NFormItem :label="t('claude.form.headersLabel')" path="balanceHeaders">
+            <NInput
               v-model="formState.balanceHeaders"
+              type="textarea"
               class="w-full"
               :rows="4"
               :placeholder="t('claude.form.headersPlaceholder')"
               :disabled="submitting"
             />
-          </UFormField>
+          </NFormItem>
 
-          <UFormField :label="t('claude.form.bodyLabel')" name="balanceBody">
-            <UTextarea
+          <NFormItem :label="t('claude.form.bodyLabel')" path="balanceBody">
+            <NInput
               v-model="formState.balanceBody"
+              type="textarea"
               :rows="4"
               :disabled="submitting"
             />
-          </UFormField>
+          </NFormItem>
 
-          <UFormField :label="t('claude.form.formulaLabel')" name="balanceFormula">
-            <UInput
+          <NFormItem :label="t('claude.form.formulaLabel')" path="balanceFormula">
+            <NInput
               v-model="formState.balanceFormula"
               :placeholder="t('claude.form.formulaPlaceholder')"
               :disabled="submitting"
-              size="lg"
+              size="large"
               class="w-full"
             />
-          </UFormField>
+          </NFormItem>
         </div>
-      </template>
-    </UCollapsible>
+      </NCollapseItem>
+    </NCollapse>
 
     <!-- 错误提示 -->
-    <UAlert
+    <NAlert
       v-if="formError || codeError"
-      color="error"
-      variant="soft"
-      :title="formError || codeError || ''"
-      icon="i-heroicons-exclamation-circle"
-    />
+      type="error"
+      :show-icon="true"
+    >
+      {{ formError || codeError }}
+    </NAlert>
 
-    <!-- 操作按钮已移至父级 UModal.footer -->
-  </UForm>
+    <!-- 操作按钮已移至父级弹窗 footer -->
+  </NForm>
 </template>
 
 <script setup lang="ts">
+import {
+  NAlert,
+  NButton,
+  NCheckbox,
+  NCollapse,
+  NCollapseItem,
+  NForm,
+  NFormItem,
+  NInput,
+  NSelect,
+  useMessage
+} from 'naive-ui'
 import type { ClaudeEnvironmentRecord } from '#shared/types/claude'
 
 const { t } = useI18n()
@@ -199,7 +202,7 @@ const emit = defineEmits<{
 import { useClaudeStore } from '~/stores/claude'
 const claudeStore = useClaudeStore()
 const { createEnvironment, updateEnvironment } = claudeStore
-const toast = useToast()
+const message = useMessage()
 
 const isEditMode = computed(() => Boolean(props.initialValue && !props.treatAsNew))
 
@@ -237,6 +240,7 @@ const codeConfigJson = ref(
 const submitting = ref(false)
 const formError = ref<string>()
 const codeError = ref<string | null>(null)
+const balanceExpanded = ref(false)
 
 // 监听 requestUrl 和 apiKey 变化,更新 JSON
 watch([() => formState.requestUrl, () => formState.apiKey], ([url, key]) => {
@@ -372,21 +376,15 @@ const handleSubmit = async () => {
     let savedRecord: ClaudeEnvironmentRecord
     if (isEditMode.value) {
       savedRecord = await updateEnvironment(props.initialValue!.id, payload)
-      toast.add({
-        title: t('claude.form.updateSuccess'),
-        description: t('claude.form.environmentUpdated', { name: formState.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('claude.form.environmentUpdated', { name: formState.title })
+      )
     }
     else {
       savedRecord = await createEnvironment(payload)
-      toast.add({
-        title: t('claude.form.createSuccess'),
-        description: t('claude.form.environmentCreated', { name: formState.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('claude.form.environmentCreated', { name: formState.title })
+      )
     }
 
     emit('saved', savedRecord)
@@ -419,3 +417,10 @@ const openCommonConfig = () => {
   emit('open-general')
 }
 </script>
+const onBalanceExpandedChange = (names: string[] | string | null) => {
+  if (Array.isArray(names)) {
+    balanceExpanded.value = names.includes('balance')
+  } else {
+    balanceExpanded.value = names === 'balance'
+  }
+}

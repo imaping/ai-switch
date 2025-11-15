@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   srcDir: 'app',
   compatibilityDate: '2025-07-15',
 
-  modules: ['@nuxt/ui', '@pinia/nuxt', '@nuxtjs/i18n'],
+  modules: ['@pinia/nuxt', '@nuxtjs/i18n', 'nuxtjs-naive-ui'],
 
   i18n: {
     locales: [
@@ -57,6 +57,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    // Vite 相关配置：保留原有 optimizeDeps，并为 Naive UI 配置 SSR noExternal
     optimizeDeps: {
       // 排除 native 模块和服务器端依赖
       exclude: ['ssh2', 'cpu-features'],
@@ -64,15 +65,10 @@ export default defineNuxtConfig({
       include: ['@iarna/toml']
     },
     ssr: {
-      // 不要在 SSR 构建中尝试外部化这些包
-      noExternal: []
+      // Naive UI 官方建议在 SSR/SSG 中不要 external 这些包
+      noExternal: ['naive-ui', 'vueuc', 'date-fns']
     }
   },
-
-  colorMode: {
-    preference: 'dark'
-  },
-
   app: {
     head: {
       title: 'AI Switch - Environment Manager',

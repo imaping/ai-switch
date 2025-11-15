@@ -1,61 +1,62 @@
 <template>
-  <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
+  <NForm :model="formState" @submit.prevent="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField :label="t('codex.form.titleLabel')" name="title" required>
-          <UInput
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <NFormItem :label="t('codex.form.titleLabel')" path="title" :required="true">
+          <NInput
             v-model="formState.title"
             :placeholder="t('codex.form.titlePlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
 
-        <UFormField :label="t('codex.form.homepageLabel')" name="homepage">
-          <UInput
+        <NFormItem :label="t('codex.form.homepageLabel')" path="homepage">
+          <NInput
             v-model="formState.homepage"
             type="url"
             :placeholder="t('codex.form.homepagePlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
       </div>
 
-      <UFormField :label="t('codex.form.descriptionLabel')" name="description">
-        <UTextarea
+      <NFormItem :label="t('codex.form.descriptionLabel')" path="description">
+        <NInput
           v-model="formState.description"
           :placeholder="t('codex.form.descriptionPlaceholder')"
+          type="textarea"
           :rows="4"
           :disabled="submitting"
           class="w-full"
         />
-      </UFormField>
+      </NFormItem>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormField label="Base URL" name="baseUrl" required>
-          <UInput
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <NFormItem label="Base URL" path="baseUrl" :required="true">
+          <NInput
             v-model="formState.baseUrl"
             placeholder="https://api.openai.com"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
 
-        <UFormField :label="t('codex.form.apiKeyLabel')" name="apiKey" required>
-          <UInput
+        <NFormItem :label="t('codex.form.apiKeyLabel')" path="apiKey" :required="true">
+          <NInput
             v-model="formState.apiKey"
             type="password"
             :placeholder="t('codex.form.apiKeyPlaceholder')"
             :disabled="submitting"
-            size="lg"
+            size="large"
             class="w-full"
           />
-        </UFormField>
+        </NFormItem>
       </div>
     </div>
 
@@ -64,10 +65,13 @@
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold">{{ t('codex.form.codeConfigTitle') }} (TOML)</h3>
         <div class="flex items-center gap-3">
-          <UCheckbox v-model="formState.writeToCommon" :label="t('codex.form.writeToCommon')" :disabled="submitting" />
-          <UButton size="xs" variant="ghost" @click="openGeneralConfig">
+          <NCheckbox v-model="formState.writeToCommon" :disabled="submitting">
+            {{ t('codex.form.writeToCommon') }}
+          </NCheckbox>
+          <NButton quaternary size="tiny" @click="openGeneralConfig">
+            <span class="i-heroicons-cog-6-tooth mr-1 inline-block h-4 w-4" />
             {{ t('codex.generalConfigManagement') }}
-          </UButton>
+          </NButton>
         </div>
       </div>
 
@@ -80,103 +84,111 @@
     </div>
 
     <!-- 余额查询配置(可选) -->
-    <UCollapsible class="flex flex-col gap-2 w-full">
-      <UButton
-        class="group"
-        :label="t('codex.form.balanceConfigTitle')"
-        color="neutral"
-        variant="link"
-        icon="i-lucide-chevron-down"
-        :ui="{
-          leadingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
-        }"
-      />
-      <template #content>
+    <NCollapse
+      class="flex w-full flex-col gap-2"
+      :default-expanded-names="balanceExpanded ? ['balance'] : []"
+      @update:expanded-names="onBalanceExpandedChange"
+    >
+      <NCollapseItem :title="t('codex.form.balanceConfigTitle')" name="balance">
         <div class="space-y-4 p-4">
-          <UFormField :label="t('codex.form.balanceUrlLabel')" name="balanceUrl">
-            <UInput
+          <NFormItem :label="t('codex.form.balanceUrlLabel')" path="balanceUrl">
+            <NInput
               v-model="formState.balanceUrl"
               :placeholder="t('codex.form.balanceUrlPlaceholder')"
               :disabled="submitting"
-              size="lg"
+              size="large"
               class="w-full"
             />
-          </UFormField>
+          </NFormItem>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField :label="t('codex.form.httpMethodLabel')" name="balanceMethod">
-              <USelect
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <NFormItem :label="t('codex.form.httpMethodLabel')" path="balanceMethod">
+              <NSelect
                 v-model="formState.balanceMethod"
-                :items="[
+                :options="[
                   { label: 'GET', value: 'GET' },
-                  { label: 'POST', value: 'POST' },
+                  { label: 'POST', value: 'POST' }
                 ]"
                 :placeholder="t('codex.form.httpMethodPlaceholder')"
                 :disabled="submitting"
-                size="lg"
                 class="w-full"
               />
-            </UFormField>
+            </NFormItem>
 
-            <UFormField :label="t('codex.form.jsonPathLabel')" name="balanceJsonPath">
-              <UInput
+            <NFormItem :label="t('codex.form.jsonPathLabel')" path="balanceJsonPath">
+              <NInput
                 v-model="formState.balanceJsonPath"
                 :placeholder="t('codex.form.jsonPathPlaceholder')"
                 :disabled="submitting"
-                size="lg"
+                size="large"
                 class="w-full"
               />
-            </UFormField>
+            </NFormItem>
           </div>
 
-          <UFormField :label="t('codex.form.headersLabel')" name="balanceHeaders">
-            <UTextarea
+          <NFormItem :label="t('codex.form.headersLabel')" path="balanceHeaders">
+            <NInput
               v-model="formState.balanceHeaders"
+              type="textarea"
               class="w-full"
               :rows="4"
               :placeholder="t('codex.form.headersPlaceholder')"
               :disabled="submitting"
             />
-          </UFormField>
+          </NFormItem>
 
-          <UFormField :label="t('codex.form.bodyLabel')" name="balanceBody">
-            <UTextarea
+          <NFormItem :label="t('codex.form.bodyLabel')" path="balanceBody">
+            <NInput
               v-model="formState.balanceBody"
+              type="textarea"
               :rows="4"
-              class="w-full"
               :disabled="submitting"
             />
-          </UFormField>
+          </NFormItem>
 
-          <UFormField :label="t('codex.form.formulaLabel')" name="balanceFormula">
-            <UInput
+          <NFormItem :label="t('codex.form.formulaLabel')" path="balanceFormula">
+            <NInput
               v-model="formState.balanceFormula"
               :placeholder="t('codex.form.formulaPlaceholder')"
               :disabled="submitting"
-              size="lg"
+              size="large"
               class="w-full"
             />
-          </UFormField>
+          </NFormItem>
         </div>
-      </template>
-    </UCollapsible>
+      </NCollapseItem>
+    </NCollapse>
 
-    <!-- 错误提示（TOML 不校验，保留接口占位） -->
-    <UAlert
+    <!-- 错误提示 -->
+    <NAlert
       v-if="formError"
-      color="red"
-      variant="soft"
-      :title="formError || ''"
-      icon="i-heroicons-exclamation-circle"
-    />
-  </UForm>
-  
+      type="error"
+      :show-icon="true"
+    >
+      {{ formError }}
+    </NAlert>
+
+    <!-- 操作按钮已移至父级弹窗 footer -->
+  </NForm>
 </template>
 
 <script setup lang="ts">
+import {
+  NAlert,
+  NButton,
+  NCheckbox,
+  NCollapse,
+  NCollapseItem,
+  NForm,
+  NFormItem,
+  NInput,
+  NSelect,
+  useMessage
+} from 'naive-ui'
 import type { CodexEnvironmentRecord } from '#shared/types/codex'
-import { useCodexStore } from '~/stores/codex'
-import * as TOML from '@iarna/toml'
+import TOML from '@iarna/toml'
+
+const { t } = useI18n()
 
 interface Props {
   initialValue?: CodexEnvironmentRecord
@@ -184,16 +196,21 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{ close: []; 'open-general': []; saved: [record: CodexEnvironmentRecord] }>()
+const emit = defineEmits<{
+  close: []
+  'open-general': []
+  saved: [record: CodexEnvironmentRecord]
+}>()
 
-const { t } = useI18n()
+import { useCodexStore } from '~/stores/codex'
 const codexStore = useCodexStore()
 const { createEnvironment, updateEnvironment } = codexStore
-const toast = useToast()
+const message = useMessage()
 
-const isEditMode = computed(() => Boolean(props.initialValue && !props.treatAsNew))
+const isEditMode = computed(
+  () => Boolean(props.initialValue && !props.treatAsNew)
+)
 
-// 表单状态
 const formState = reactive({
   title: props.initialValue?.title || '',
   homepage: props.initialValue?.homepage || '',
@@ -208,33 +225,44 @@ const formState = reactive({
     : '',
   balanceBody: props.initialValue?.balanceRequest?.body || '',
   balanceJsonPath: props.initialValue?.balanceJsonPath || '',
-  balanceFormula: props.initialValue?.balanceFormula || '',
+  balanceFormula: props.initialValue?.balanceFormula || ''
 })
 
-// TOML 配置文本（不做语法校验）
-const defaultToml = `# Codex 配置示例\n# 这里可以粘贴你的 TOML 配置\n`
-const configToml = ref(props.initialValue?.configToml || defaultToml)
-
+const defaultConfig = props.initialValue?.tomlConfig || ''
+const configToml = ref<string>(defaultConfig)
 const submitting = ref(false)
 const formError = ref<string>()
 const codeError = ref<string | null>(null)
+const balanceExpanded = ref(false)
+
+const onBalanceExpandedChange = (names: string[] | string | null) => {
+  if (Array.isArray(names)) {
+    balanceExpanded.value = names.includes('balance')
+  } else {
+    balanceExpanded.value = names === 'balance'
+  }
+}
 
 const handleSubmit = async () => {
   formError.value = undefined
 
+  if (!formState.title.trim()) {
+    formError.value = t('codex.form.titleRequired')
+    return
+  }
+
+  if (!formState.baseUrl.trim()) {
+    formError.value = t('codex.form.baseUrlRequired')
+    return
+  }
+
+  if (!configToml.value.trim()) {
+    formError.value = t('codex.form.fixTomlError')
+    return
+  }
+
   try {
     submitting.value = true
-
-    // 解析 balance headers
-    let balanceHeaders: Record<string, string> | undefined
-    if (formState.balanceHeaders.trim()) {
-      try {
-        balanceHeaders = JSON.parse(formState.balanceHeaders)
-      }
-      catch {
-        throw new Error(t('codex.form.balanceHeadersError'))
-      }
-    }
 
     const payload: any = {
       title: formState.title,
@@ -242,16 +270,25 @@ const handleSubmit = async () => {
       description: formState.description || undefined,
       baseUrl: formState.baseUrl,
       apiKey: formState.apiKey,
-      configToml: configToml.value,
       writeToCommon: formState.writeToCommon,
+      tomlConfig: configToml.value
     }
 
     if (formState.balanceUrl?.trim()) {
+      let balanceHeaders: Record<string, string> | undefined
+      if (formState.balanceHeaders.trim()) {
+        try {
+          balanceHeaders = JSON.parse(formState.balanceHeaders)
+        } catch {
+          throw new Error(t('codex.form.balanceHeadersError'))
+        }
+      }
+
       payload.balanceUrl = formState.balanceUrl
       payload.balanceRequest = {
         method: formState.balanceMethod || undefined,
         headers: balanceHeaders,
-        body: formState.balanceBody || undefined,
+        body: formState.balanceBody || undefined
       }
       payload.balanceJsonPath = formState.balanceJsonPath || undefined
       payload.balanceFormula = formState.balanceFormula || undefined
@@ -265,30 +302,21 @@ const handleSubmit = async () => {
     let savedRecord: CodexEnvironmentRecord
     if (isEditMode.value) {
       savedRecord = await updateEnvironment(props.initialValue!.id, payload)
-      toast.add({
-        title: t('codex.form.updateSuccess'),
-        description: t('codex.form.environmentUpdated', { name: formState.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
-    }
-    else {
+      message.success(
+        t('codex.form.environmentUpdated', { name: formState.title })
+      )
+    } else {
       savedRecord = await createEnvironment(payload)
-      toast.add({
-        title: t('codex.form.createSuccess'),
-        description: t('codex.form.environmentCreated', { name: formState.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('codex.form.environmentCreated', { name: formState.title })
+      )
     }
 
     emit('saved', savedRecord)
     emit('close')
-  }
-  catch (error: any) {
+  } catch (error: any) {
     formError.value = error.message || t('codex.form.operationFailed')
-  }
-  finally {
+  } finally {
     submitting.value = false
   }
 }
@@ -300,7 +328,7 @@ defineExpose({
   isEditMode,
   isSubmitting: () => submitting.value,
   hasCodeError: () => Boolean(codeError.value),
-  isEdit: () => isEditMode.value,
+  isEdit: () => isEditMode.value
 })
 
 const openGeneralConfig = () => {
@@ -400,3 +428,4 @@ watch(
   }
 )
 </script>
+

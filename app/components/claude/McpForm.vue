@@ -1,42 +1,42 @@
 <template>
-  <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
+  <NForm :model="formState" @submit.prevent="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <UFormField  :label="t('claude.mcpForm.serviceNameLabel')" name="name" required>
-        <UInput
+      <NFormItem :label="t('claude.mcpForm.serviceNameLabel')" path="name" :required="true">
+        <NInput
           v-model="formState.name"
           :placeholder="t('claude.mcpForm.serviceNamePlaceholder')"
           :disabled="submitting || isEditMode"
-          size="lg"
+          size="large"
           class="w-full"
         />
         <template #help>
           <span class="text-xs text-gray-500">{{ t('claude.mcpForm.serviceNameHelp') }}</span>
         </template>
-      </UFormField >
+      </NFormItem>
 
-      <UFormField  :label="t('claude.mcpForm.displayNameLabel')" name="displayName">
-        <UInput
+      <NFormItem :label="t('claude.mcpForm.displayNameLabel')" path="displayName">
+        <NInput
           v-model="formState.displayName"
           :placeholder="t('claude.mcpForm.displayNamePlaceholder')"
           :disabled="submitting"
-          size="lg"
+          size="large"
           class="w-full"
         />
-      </UFormField >
+      </NFormItem>
 
-      <UFormField  :label="t('claude.mcpForm.docUrlLabel')" name="docUrl">
-        <UInput
+      <NFormItem :label="t('claude.mcpForm.docUrlLabel')" path="docUrl">
+        <NInput
           v-model="formState.docUrl"
           type="url"
           :placeholder="t('claude.mcpForm.docUrlPlaceholder')"
           :disabled="submitting"
-          size="lg"
+          size="large"
           class="w-full"
         />
-      </UFormField >
+      </NFormItem>
 
-      <UCheckbox
+      <NCheckbox
         v-model="formState.enabled"
         :label="t('claude.mcpForm.enableService')"
         :disabled="submitting"
@@ -59,19 +59,27 @@
     </div>
 
     <!-- 错误提示 -->
-    <UAlert
+    <NAlert
       v-if="formError || codeError"
-      color="red"
-      variant="soft"
-      :title="formError || codeError || ''"
-      icon="i-heroicons-exclamation-circle"
-    />
+      type="error"
+      :show-icon="true"
+    >
+      {{ formError || codeError }}
+    </NAlert>
 
-    <!-- 操作按钮移至父级 UModal.footer -->
-  </UForm>
+    <!-- 操作按钮移至父级弹窗 footer -->
+  </NForm>
 </template>
 
 <script setup lang="ts">
+import {
+  NAlert,
+  NCheckbox,
+  NForm,
+  NFormItem,
+  NInput,
+  useMessage
+} from 'naive-ui'
 import type { ClaudeMcpRecord } from '#shared/types/claude'
 
 const { t } = useI18n()
@@ -87,7 +95,7 @@ const emit = defineEmits<{
 
 import { useClaudeStore } from '~/stores/claude'
 const { upsertMcpServer } = useClaudeStore()
-const toast = useToast()
+const message = useMessage()
 
 const isEditMode = computed(() => Boolean(props.initialValue))
 
@@ -152,12 +160,11 @@ const handleSubmit = async () => {
     await upsertMcpServer(payload)
 
     const name = formState.displayName || formState.name
-    toast.add({
-      title: isEditMode.value ? t('claude.form.updateSuccess') : t('claude.form.createSuccess'),
-      description: isEditMode.value ? t('claude.mcpForm.mcpUpdated', { name }) : t('claude.mcpForm.mcpCreated', { name }),
-      color: 'success',
-      icon: 'i-heroicons-check-circle',
-    })
+    message.success(
+      isEditMode.value
+        ? t('claude.mcpForm.mcpUpdated', { name })
+        : t('claude.mcpForm.mcpCreated', { name })
+    )
 
     emit('close')
   }
@@ -169,7 +176,7 @@ const handleSubmit = async () => {
   }
 }
 
-// 暴露方法给父级 UModal.footer 调用，保持与 EnvironmentForm 一致
+// 暴露方法给父级弹窗 footer 调用，保持与 EnvironmentForm 一致
 defineExpose({
   submit: () => handleSubmit(),
   submitting,

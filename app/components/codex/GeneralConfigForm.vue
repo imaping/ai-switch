@@ -1,5 +1,5 @@
 <template>
-  <UForm class="space-y-6" @submit.prevent>
+  <NForm class="space-y-6" @submit.prevent>
     <div class="space-y-3">
       <h3 class="text-lg font-semibold">{{ t('codex.generalConfigForm.title') }}</h3>
 
@@ -10,10 +10,14 @@
         :validate="false"
       />
     </div>
-  </UForm>
+  </NForm>
 </template>
 
 <script setup lang="ts">
+import {
+  NForm,
+  useMessage
+} from 'naive-ui'
 import { useCodexStore } from '~/stores/codex'
 
 interface Props {
@@ -23,18 +27,13 @@ const props = defineProps<Props>()
 
 const { t } = useI18n()
 const store = useCodexStore()
-const toast = useToast()
+const message = useMessage()
 
 const tomlText = ref<string>(props.initialValue ?? '')
 
 const submit = async () => {
   await store.updateGeneralConfig(tomlText.value)
-  toast.add({
-    title: t('codex.generalConfigForm.saveSuccess'),
-    description: t('codex.generalConfigForm.configUpdated'),
-    color: 'success',
-    icon: 'i-heroicons-check-circle',
-  })
+  message.success(t('codex.generalConfigForm.configUpdated'))
 }
 
 defineExpose({

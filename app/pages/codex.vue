@@ -13,89 +13,115 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <USelect
-            v-model="selectedScope"
-            @change="envScopeStore.setScope(selectedScope)"
-            :items="scopeOptions"
-            option-attribute="label"
-            size="sm"
+          <NSelect
+            v-model:value="selectedScope"
             class="min-w-[160px]"
+            size="small"
+            :options="scopeOptions"
             :placeholder="t('codex.selectScope')"
+            @update:value="envScopeStore.setScope"
           />
-          <UButton
-            icon="i-heroicons-cog-6-tooth"
-            variant="outline"
+          <NButton
+            secondary
+            size="small"
             @click="openGeneralModal"
           >
             {{ t('codex.generalConfigManagement') }}
-          </UButton>
+          </NButton>
         </div>
       </div>
     </div>
 
     <!-- 环境管理卡片 -->
-    <UCard class="mb-6">
+    <NCard class="mb-6">
       <template #header>
-        <div class="flex justify-between items-center">
+        <div class="flex items-center justify-between">
           <div>
             <h2 class="text-xl font-semibold">{{ t('codex.environmentManagement') }}</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {{ t('codex.environmentManagementDesc') }}
             </p>
           </div>
-          <UButton icon="i-heroicons-plus" @click="openEnvModal()">
+          <NButton type="primary" size="small" @click="openEnvModal()">
+            <template #icon>
+              <n-icon><Add /></n-icon>
+            </template>
             {{ t('codex.add') }}
-          </UButton>
+          </NButton>
         </div>
       </template>
 
-      <div v-if="environments.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        {{ t('codex.noEnvironments') }}
-      </div>
-      <div v-else>
-        <UTable :data="environments" :columns="envColumns" sticky class="flex-1 h-100" />
-      </div>
-    </UCard>
+      <NDataTable
+          :data="environments"
+          :columns="envColumns"
+          :bordered="false"
+          :single-line="false"
+      />
+    </NCard>
 
     <!-- MCP 列表卡片 -->
-    <UCard>
+    <NCard>
       <template #header>
-        <div class="flex justify-between items-center">
+        <div class="flex items-center justify-between">
           <div>
             <h2 class="text-xl font-semibold">{{ t('codex.mcpList') }}</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {{ t('codex.mcpListDesc') }}
             </p>
           </div>
-          <UButton icon="i-heroicons-plus" @click="openMcpModal()">
+          <NButton type="primary" size="small" @click="openMcpModal()">
+            <template #icon>
+              <n-icon><Add /></n-icon>
+            </template>
             {{ t('codex.add') }}
-          </UButton>
+          </NButton>
         </div>
       </template>
 
-      <div v-if="mcpServers.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        {{ t('codex.noMcpServers') }}
-      </div>
-      <div v-else>
-        <UTable :data="mcpServers" :columns="mcpColumns"  sticky class="flex-1 h-60"/>
-      </div>
-    </UCard>
+      <NDataTable
+        :data="mcpServers"
+        :columns="mcpColumns"
+        :bordered="false"
+        :single-line="false"
+      />
+    </NCard>
 
     <!-- MCP 表单模态框（对齐"新增环境"布局） -->
-    <UModal v-model:open="mcpModalOpen" :title="editingMcp ? t('codex.editMcp') : t('codex.addMcp')" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
-      <template #body>
+    <NModal v-model:show="mcpModalOpen">
+      <NCard
+        :title="editingMcp ? t('codex.editMcp') : t('codex.addMcp')"
+        class="w-full sm:max-w-3xl"
+        closable
+        @close="closeMcpModal"
+      >
         <CodexMcpForm ref="mcpFormRef" :initial-value="editingMcp" @close="closeMcpModal" />
-      </template>
-      <template #footer>
-        <UButton variant="outline" @click="closeMcpModal">{{ t('common.cancel') }}</UButton>
-        <UButton :loading="mcpFormRef?.isSubmitting?.()" :disabled="mcpFormRef?.hasCodeError?.()" @click="mcpFormRef?.submit()">
-          {{ mcpFormRef?.isEdit?.() ? t('codex.saveChanges') : t('codex.createMcp') }}
-        </UButton>
-      </template>
-    </UModal>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <NButton quaternary size="small" @click="closeMcpModal">
+              {{ t('common.cancel') }}
+            </NButton>
+            <NButton
+              type="primary"
+              size="small"
+              :loading="mcpFormRef?.isSubmitting?.()"
+              :disabled="mcpFormRef?.hasCodeError?.()"
+              @click="mcpFormRef?.submit()"
+            >
+              {{ mcpFormRef?.isEdit?.() ? t('codex.saveChanges') : t('codex.createMcp') }}
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
     <!-- 环境表单模态框 -->
-    <UModal v-model:open="envModalOpen" :title="editingEnv && !envFormTreatAsNew ? t('codex.editEnvironment') : t('codex.createEnvironment')" :ui="{ content: 'sm:max-w-5xl w-full', footer: 'justify-end' }">
-      <template #body>
+    <NModal v-model:show="envModalOpen">
+      <NCard
+        :title="editingEnv && !envFormTreatAsNew ? t('codex.editEnvironment') : t('codex.createEnvironment')"
+        class="w-full sm:max-w-5xl"
+        closable
+        @close="closeEnvModal"
+      >
         <CodexEnvironmentForm
           ref="envFormRef"
           :initial-value="editingEnv"
@@ -104,89 +130,111 @@
           @open-general="openGeneralModal"
           @close="closeEnvModal"
         />
-      </template>
-      <template #footer>
-        <UButton variant="outline" @click="closeEnvModal">{{ t('common.cancel') }}</UButton>
-        <UButton :loading="envFormRef?.isSubmitting?.()" :disabled="envFormRef?.hasCodeError?.()" @click="envFormRef?.submit()">
-          {{ envFormRef?.isEdit?.() ? t('codex.saveChanges') : t('codex.createEnvironment') }}
-        </UButton>
-      </template>
-    </UModal>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <NButton quaternary size="small" @click="closeEnvModal">
+              {{ t('common.cancel') }}
+            </NButton>
+            <NButton
+              type="primary"
+              size="small"
+              :loading="envFormRef?.isSubmitting?.()"
+              :disabled="envFormRef?.hasCodeError?.()"
+              @click="envFormRef?.submit()"
+            >
+              {{ envFormRef?.isEdit?.() ? t('codex.saveChanges') : t('codex.createEnvironment') }}
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
 
     <!-- 通用配置管理（置于末尾以获得更高层级） -->
-    <UModal v-model:open="generalModalOpen" :title="t('codex.generalConfigManagement')" :ui="{ content: 'sm:max-w-4xl w-full', footer: 'justify-end' }">
-      <template #body>
+    <NModal v-model:show="generalModalOpen">
+      <NCard
+        :title="t('codex.generalConfigManagement')"
+        class="w-full sm:max-w-4xl"
+        closable
+        @close="closeGeneralModal"
+      >
         <CodexGeneralConfigForm
           ref="generalFormRef"
           :initial-value="generalConfig?.payload"
         />
-      </template>
-      <template #footer>
-        <UButton variant="outline" @click="closeGeneralModal">{{ t('common.cancel') }}</UButton>
-        <UButton :loading="generalFormRef?.isSubmitting?.()" :disabled="generalFormRef?.hasCodeError?.()" @click="onSaveGeneral()">
-          {{ t('common.save') }}
-        </UButton>
-      </template>
-    </UModal>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <NButton quaternary size="small" @click="closeGeneralModal">
+              {{ t('common.cancel') }}
+            </NButton>
+            <NButton
+              type="primary"
+              size="small"
+              :loading="generalFormRef?.isSubmitting?.()"
+              :disabled="generalFormRef?.hasCodeError?.()"
+              @click="onSaveGeneral()"
+            >
+              {{ t('common.save') }}
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
 
     <!-- 删除确认对话框 -->
-    <UModal v-model:open="confirmDialog.open" :ui="{ content: 'sm:max-w-md w-full' }">
-      <template #content>
-        <UCard class="max-h-[85dvh] overflow-y-auto">
-          <template #header>
-            <h3 class="text-xl font-semibold">
-              {{ confirmDialog.mode === 'env' ? t('codex.deleteEnvironment') : t('codex.deleteMcp') }}
-            </h3>
-          </template>
-
-          <p class="mb-6 text-gray-700 dark:text-gray-300">
-            {{ t('codex.deleteConfirmMessage', {
-              name: confirmDialog.mode === 'env'
-                ? confirmDialog.env?.title || t('codex.unnamedEnvironment')
-                : confirmDialog.mcp?.displayName || confirmDialog.mcp?.name
-            }) }}
-          </p>
-
-          <div class="flex justify-end gap-3">
-            <UButton
-              variant="outline"
-              :disabled="confirmLoading"
-              @click="closeConfirmDialog"
-            >
-              {{ t('common.cancel') }}
-            </UButton>
-            <UButton
-              color="red"
-              :loading="confirmLoading"
-              @click="handleConfirmDelete"
-            >
-              {{ t('codex.confirmDelete') }}
-            </UButton>
-          </div>
-        </UCard>
-      </template>
-    </UModal>
-
-    <!-- 全局数据请求等待框 -->
-    <Transition name="fade">
-      <div
-        v-if="loading"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    <NModal v-model:show="confirmDialog.open">
+      <NCard
+        class="max-h-[85dvh] w-full overflow-y-auto sm:max-w-md"
+        :title="confirmDialog.mode === 'env' ? t('codex.deleteEnvironment') : t('codex.deleteMcp')"
+        closable
+        @close="closeConfirmDialog"
       >
-        <UCard class="flex items-center gap-3">
-          <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
-          <span class="text-sm text-gray-700 dark:text-gray-200">
-            {{ t('codex.loading') }}
-          </span>
-        </UCard>
-      </div>
-    </Transition>
+        <p class="mb-6 text-gray-700 dark:text-gray-300">
+          {{ t('codex.deleteConfirmMessage', {
+            name: confirmDialog.mode === 'env'
+              ? confirmDialog.env?.title || t('codex.unnamedEnvironment')
+              : confirmDialog.mcp?.displayName || confirmDialog.mcp?.name
+          }) }}
+        </p>
+
+        <div class="flex justify-end gap-3">
+          <NButton
+            quaternary
+            size="small"
+            :disabled="confirmLoading"
+            @click="closeConfirmDialog"
+          >
+            {{ t('common.cancel') }}
+          </NButton>
+          <NButton
+            type="error"
+            size="small"
+            :loading="confirmLoading"
+            @click="handleConfirmDelete"
+          >
+            {{ t('codex.confirmDelete') }}
+          </NButton>
+        </div>
+      </NCard>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { h, resolveComponent, ref, watch, computed } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
+import { h, ref, watch, computed } from 'vue'
+import { Add,Refresh } from '@vicons/ionicons5'
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NModal,
+  NSelect,
+  NSwitch,
+  NIcon,
+  useMessage,
+  type DataTableColumns
+} from 'naive-ui'
 import type { CodexEnvironmentRecord, CodexMcpRecord } from '#shared/types/codex'
 
 const { t } = useI18n()
@@ -212,7 +260,7 @@ const {
   error,
 } = storeToRefs(codexStore)
 const { fetchOverview, activateEnvironment, toggleMcpServer, deleteEnvironment } = codexStore
-const toast = useToast()
+const message = useMessage()
 
 interface ScopeOption {
   label: string
@@ -232,7 +280,7 @@ const scopeOptions = computed<ScopeOption[]>(() => {
   return options
 })
 
-const selectedScope = ref(envScopeStore.scope)
+const selectedScope = ref<string>(envScopeStore.scope)
 // 生命周期
 onMounted(async () => {
   if (!remoteEnvs.value.length) {
@@ -252,132 +300,236 @@ watch(
 )
 
 // 方法
-// UTable 列定义（Nuxt UI v4）
-const UBadge = resolveComponent('UBadge')
-const UButton = resolveComponent('UButton')
-
-const envColumns: TableColumn<CodexEnvironmentRecord>[] = [
+// 表格列（Naive UI NDataTable）
+const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
   {
-    accessorKey: 'title',
-    header: t('codex.name'),
-    cell: ({ row }) => h('div', {}, [
-      h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.title || t('codex.unnamed')),
-      row.original.description
-        ? h('p', { class: 'text-sm text-gray-500 dark:text-gray-400 mt-1' }, row.original.description)
-        : null
-    ])
+    key: 'title',
+    title: t('codex.name'),
+    render(row) {
+      return h('div', {}, [
+        h(
+          'p',
+          { class: 'font-semibold text-gray-900 dark:text-gray-100' },
+          row.title || t('codex.unnamed')
+        ),
+        row.description
+          ? h(
+              'p',
+              { class: 'mt-1 text-sm text-gray-500 dark:text-gray-400' },
+              row.description
+            )
+          : null
+      ])
+    }
   },
   {
-    accessorKey: 'homepage',
-    header: t('codex.homepage'),
-    cell: ({ row }) => row.original.homepage
-      ? h('a', {
-        href: row.original.homepage,
-        target: '_blank',
-        rel: 'noreferrer',
-        class: 'text-primary hover:underline text-sm'
-      }, row.original.homepage)
-      : h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('codex.notProvided'))
-  },
-  {
-    id: 'enabled',
-    header: t('codex.enabled'),
-    cell: ({ row }) => h(USwitch as any, {
-      modelValue: row.original.status === 'active',
-      'onUpdate:modelValue': (val: boolean) => handleToggleEnv(row.original, val),
-      disabled: loading.value,
-      size: 'lg'
-    })
-  },
-  {
-    id: 'balance',
-    header: () => h('div', { class: 'flex items-center gap-2' }, [
-      h('span', {}, t('codex.balance')),
-      h(
-        UButton as any,
-        {
-          size: 'xs',
-          variant: 'ghost',
-          icon: 'i-heroicons-arrow-path',
-          title: t('codex.refreshAllBalances'),
-          onClick: () => handleQueryAllBalances(),
-          disabled: loading.value,
-        }
+    key: 'homepage',
+    title: t('codex.homepage'),
+    render(row) {
+      if (row.homepage) {
+        return h(
+          'a',
+          {
+            href: row.homepage,
+            target: '_blank',
+            rel: 'noreferrer',
+            class: 'text-primary hover:underline text-sm'
+          },
+          row.homepage
+        )
+      }
+      return h(
+        'span',
+        { class: 'text-sm text-gray-500 dark:text-gray-400' },
+        t('codex.notProvided')
       )
-    ]),
-    cell: ({ row }) => {
-      const env = row.original as CodexEnvironmentRecord
+    }
+  },
+  {
+    key: 'enabled',
+    title: t('codex.enabled'),
+    render(row) {
+      return h(NSwitch, {
+        value: row.status === 'active',
+        size: 'large',
+        disabled: loading.value,
+        'onUpdate:value': (val: boolean) => handleToggleEnv(row, val)
+      })
+    }
+  },
+  {
+    key: 'balance',
+    title: () =>
+      h('div', { class: 'flex items-center gap-2' }, [
+        h('span', {}, t('codex.balance')),
+        h(
+          NButton,
+          {
+            quaternary:true,
+            circle:true,
+            size: 'tiny',
+            type:'info',
+            disabled: loading.value,
+            onClick: () => handleQueryAllBalances()
+          },
+          {
+            icon: ()=> h(NIcon, null, {default:() => h(Refresh)})
+          }
+        )
+      ]),
+    render(row) {
+      const env = row
       if (!env.balanceUrl) {
-        return h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('codex.notConfigured'))
+        return h(
+          'span',
+          { class: 'text-sm text-gray-500 dark:text-gray-400' },
+          t('codex.notConfigured')
+        )
       }
       const parts: any[] = []
-      const text = typeof (env as any).currentBalance === 'number' ? `${formatCurrency((env as any).currentBalance)}` : t('codex.notQueried')
+      const text =
+        typeof (env as any).currentBalance === 'number'
+          ? `${formatCurrency((env as any).currentBalance)}`
+          : t('codex.notQueried')
       parts.push(h('span', { class: 'text-sm' }, text))
       parts.push(
         h(
-          UButton as any,
+          NButton,
           {
-            size: 'xs',
-            variant: 'ghost',
-            icon: 'i-heroicons-arrow-path',
-            title: t('codex.refreshBalance'),
+            quaternary:true,
+            circle:true,
+            size: 'tiny',
+            type:'info',
             disabled: loading.value,
             onClick: () => handleQueryBalance(env)
           },
-          {}
+          {
+            icon: ()=> h(NIcon, null, {default:() => h(Refresh)})
+          }
         )
       )
       return h('div', { class: 'flex items-center gap-2' }, parts)
     }
   },
   {
-    id: 'actions',
-    header: () => h('div', { class: 'text-right' }, t('codex.actions')),
-    cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal(row.original) }, { default: () => t('common.edit') }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openEnvModal({ ...row.original, title: `${row.original.title}(副本)` } as CodexEnvironmentRecord, true) }, { default: () => t('codex.copy') }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.status === 'active', onClick: () => handleDeleteEnv(row.original) }, { default: () => t('common.delete') })
-    ])
+    key: 'actions',
+    title: t('codex.actions'),
+    align: 'right',
+    render(row) {
+      return h('div', { class: 'flex justify-end gap-2' }, [
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            onClick: () => openEnvModal(row)
+          },
+          { default: () => t('common.edit') }
+        ),
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            onClick: () =>
+              openEnvModal(
+                { ...row, title: `${row.title || ''}(副本)` } as CodexEnvironmentRecord,
+                true
+              )
+          },
+          { default: () => t('codex.copy') }
+        ),
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            type: 'error',
+            disabled: row.status === 'active',
+            onClick: () => handleDeleteEnv(row)
+          },
+          { default: () => t('common.delete') }
+        )
+      ])
+    }
   }
 ]
 
-const USwitch = resolveComponent('USwitch')
-
-const mcpColumns: TableColumn<CodexMcpRecord>[] = [
+const mcpColumns: DataTableColumns<CodexMcpRecord> = [
   {
-    id: 'name',
-    header: t('codex.name'),
-    cell: ({ row }) => h('p', { class: 'font-semibold text-gray-900 dark:text-gray-100' }, row.original.displayName || row.original.name)
+    key: 'name',
+    title: t('codex.name'),
+    render(row) {
+      return h(
+        'p',
+        { class: 'font-semibold text-gray-900 dark:text-gray-100' },
+        row.displayName || row.name
+      )
+    }
   },
   {
-    id: 'doc',
-    header: t('codex.doc'),
-    cell: ({ row }) => row.original.docUrl
-      ? h('a', {
-        href: row.original.docUrl,
-        target: '_blank',
-        rel: 'noreferrer',
-        class: 'text-primary hover:underline text-sm'
-      }, row.original.docUrl)
-      : h('span', { class: 'text-sm text-gray-500 dark:text-gray-400' }, t('codex.noDocLink'))
+    key: 'doc',
+    title: t('codex.doc'),
+    render(row) {
+      if (row.docUrl) {
+        return h(
+          'a',
+          {
+            href: row.docUrl,
+            target: '_blank',
+            rel: 'noreferrer',
+            class: 'text-primary hover:underline text-sm'
+          },
+          row.docUrl
+        )
+      }
+      return h(
+        'span',
+        { class: 'text-sm text-gray-500 dark:text-gray-400' },
+        t('codex.noDocLink')
+      )
+    }
   },
   {
-    id: 'enabled',
-    header: t('codex.enabled'),
-    cell: ({ row }) => h(USwitch as any, {
-      modelValue: row.original.enabled,
-      'onUpdate:modelValue': (val: boolean) => handleToggleMcp(row.original, val),
-      disabled: loading.value,
-      size: 'lg'
-    })
+    key: 'enabled',
+    title: t('codex.enabled'),
+    render(row) {
+      return h(NSwitch, {
+        value: row.enabled,
+        size: 'large',
+        disabled: loading.value,
+        'onUpdate:value': (val: boolean) => handleToggleMcp(row, val)
+      })
+    }
   },
   {
-    id: 'actions',
-    header: () => h('div', { class: 'text-right' }, t('codex.actions')),
-    cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openMcpModal(row.original) }, { default: () => t('common.edit') }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: row.original.enabled, onClick: () => handleDeleteMcp(row.original) }, { default: () => t('common.delete') })
-    ])
+    key: 'actions',
+    title: t('codex.actions'),
+    align: 'right',
+    render(row) {
+      return h('div', { class: 'flex justify-end gap-2' }, [
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            onClick: () => openMcpModal(row)
+          },
+          { default: () => t('common.edit') }
+        ),
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            type: 'error',
+            disabled: row.enabled,
+            onClick: () => handleDeleteMcp(row)
+          },
+          { default: () => t('common.delete') }
+        )
+      ])
+    }
   }
 ]
 
@@ -403,28 +555,15 @@ const handleToggleEnv = async (record: CodexEnvironmentRecord, next: boolean) =>
   try {
     if (next) {
       await activateEnvironment(record.id)
-      toast.add({
-        title: t('codex.activateSuccess'),
-        description: t('codex.environmentActivated', { name: record.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('codex.environmentActivated', { name: record.title })
+      )
     } else {
       // 目前不支持直接禁用
-      toast.add({
-        title: t('codex.cannotDisable'),
-        description: t('codex.switchByEnabling'),
-        color: 'orange',
-        icon: 'i-heroicons-information-circle',
-      })
+      message.info(t('codex.switchByEnabling'))
     }
   } catch (err: any) {
-    toast.add({
-      title: t('codex.operationError'),
-      description: err.message,
-      color: 'error',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    message.error(err?.message || t('codex.operationError'))
   } finally {
     await fetchOverview()
   }
@@ -442,27 +581,14 @@ const handleQueryBalance = async (record: CodexEnvironmentRecord) => {
   try {
     const res = await codexStore.queryBalance(record.id)
     if (res.error) {
-      toast.add({
-        title: t('codex.queryError'),
-        description: res.error,
-        color: 'error',
-        icon: 'i-heroicons-exclamation-circle',
-      })
+      message.error(res.error || t('codex.queryError'))
     } else {
-      toast.add({
-        title: t('codex.querySuccess'),
-        description: `${t('codex.balance')}: ${res.balance} (${res.raw})`,
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        `${t('codex.balance')}: ${res.balance} (${res.raw})`
+      )
     }
   } catch (err: any) {
-    toast.add({
-      title: t('codex.queryError'),
-      description: err.message,
-      color: 'error',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    message.error(err?.message || t('codex.queryError'))
   }
 }
 
@@ -541,12 +667,7 @@ const handleDeleteEnv = (record: CodexEnvironmentRecord) => {
 
 const handleDeleteMcp = (record: CodexMcpRecord) => {
   if (record.enabled) {
-    toast.add({
-      title: t('codex.cannotDelete'),
-      description: t('codex.disableMcpFirst'),
-      color: 'error',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    message.error(t('codex.disableMcpFirst'))
     return
   }
   confirmDialog.value = {
@@ -571,32 +692,23 @@ const handleConfirmDelete = async () => {
 
     if (confirmDialog.value.mode === 'env' && confirmDialog.value.env) {
       await deleteEnvironment(confirmDialog.value.env.id)
-      toast.add({
-        title: t('codex.deleteSuccess'),
-        description: t('codex.environmentDeleted', { name: confirmDialog.value.env.title }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('codex.environmentDeleted', { name: confirmDialog.value.env.title || '' })
+      )
     }
     else if (confirmDialog.value.mode === 'mcp' && confirmDialog.value.mcp) {
       await codexStore.deleteMcpServer(confirmDialog.value.mcp.id)
-      toast.add({
-        title: t('codex.deleteSuccess'),
-        description: t('codex.mcpDeleted', { name: confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name }),
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        t('codex.mcpDeleted', {
+          name: confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name
+        })
+      )
     }
 
     confirmDialog.value = { open: false }
   }
   catch (error: any) {
-    toast.add({
-      title: t('codex.deleteError'),
-      description: error.message,
-      color: 'error',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    message.error(error?.message || t('codex.deleteError'))
   }
   finally {
     confirmLoading.value = false

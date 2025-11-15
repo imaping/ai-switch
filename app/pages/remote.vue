@@ -16,81 +16,110 @@
     </div>
 
     <!-- 远程主机列表 -->
-    <UCard>
+    <NCard>
       <template #header>
-        <div class="flex justify-between items-center">
+        <div class="flex items-center justify-between">
           <div>
             <h2 class="text-xl font-semibold">{{ t('remote.hostList') }}</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {{ t('remote.hostListDesc') }}
             </p>
           </div>
-          <UButton icon="i-heroicons-plus" @click="openHostModal()">
+          <NButton type="primary" size="small" @click="openHostModal()">
+            <template #icon>
+              <n-icon><Add /></n-icon>
+            </template>
             {{ t('remote.addHost') }}
-          </UButton>
+          </NButton>
         </div>
       </template>
 
-      <div v-if="environments.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        {{ t('remote.noHosts') }}
-      </div>
-      <div v-else>
-        <UTable :data="environments" :columns="hostColumns" />
-      </div>
-    </UCard>
+      <NDataTable
+          :data="environments"
+          :columns="hostColumns"
+          :bordered="false"
+          :single-line="false"
+        />
+    </NCard>
 
-    <!-- 主机表单模态框（统一布局：标题 + #body + #footer） -->
-    <UModal v-model:open="hostModalOpen" :title="editingHost ? t('remote.editHost') : t('remote.addHostTitle')" :ui="{ content: 'sm:max-w-3xl w-full', footer: 'justify-end' }">
-      <template #body>
+    <!-- 主机表单模态框 -->
+    <NModal v-model:show="hostModalOpen">
+      <NCard
+        :title="editingHost ? t('remote.editHost') : t('remote.addHostTitle')"
+        class="w-full sm:max-w-3xl"
+        closable
+        @close="closeHostModal"
+      >
         <RemoteHostForm ref="hostFormRef" :initial-value="editingHost" @close="closeHostModal" />
-      </template>
-      <template #footer>
-        <UButton variant="outline" @click="closeHostModal">{{ t('common.cancel') }}</UButton>
-        <UButton :loading="hostFormRef?.isSubmitting?.()" @click="hostFormRef?.submit()">
-          {{ editingHost ? t('remote.saveChanges') : t('remote.addHostTitle') }}
-        </UButton>
-      </template>
-    </UModal>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <NButton quaternary size="small" @click="closeHostModal">
+              {{ t('common.cancel') }}
+            </NButton>
+            <NButton
+              type="primary"
+              size="small"
+              :loading="hostFormRef?.isSubmitting?.()"
+              @click="hostFormRef?.submit()"
+            >
+              {{ editingHost ? t('remote.saveChanges') : t('remote.addHostTitle') }}
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
 
     <!-- 删除确认对话框 -->
-    <UModal v-model:open="confirmDialog.open" :ui="{ content: 'sm:max-w-md w-full' }">
-      <template #content>
-        <UCard class="max-h-[85dvh] overflow-y-auto">
-          <template #header>
-            <h3 class="text-xl font-semibold">{{ t('remote.deleteHost') }}</h3>
-          </template>
+    <NModal v-model:show="confirmDialog.open">
+      <NCard
+        class="max-h-[85dvh] w-full overflow-y-auto sm:max-w-md"
+        :title="t('remote.deleteHost')"
+        closable
+        @close="closeConfirmDialog"
+      >
+        <p class="mb-6 text-gray-700 dark:text-gray-300">
+          {{ t('remote.deleteConfirmMessage', {
+            name: confirmDialog.host?.title || t('remote.unnamedHost')
+          }) }}
+        </p>
 
-          <p class="mb-6 text-gray-700 dark:text-gray-300">
-            {{ t('remote.deleteConfirmMessage', {
-              name: confirmDialog.host?.title || t('remote.unnamedHost')
-            }) }}
-          </p>
-
-          <div class="flex justify-end gap-3">
-            <UButton
-              variant="outline"
-              :disabled="confirmLoading"
-              @click="closeConfirmDialog"
-            >
-              {{ t('common.cancel') }}
-            </UButton>
-            <UButton
-              color="red"
-              :loading="confirmLoading"
-              @click="handleConfirmDelete"
-            >
-              {{ t('remote.confirmDelete') }}
-            </UButton>
-          </div>
-        </UCard>
-      </template>
-    </UModal>
+        <div class="flex justify-end gap-3">
+          <NButton
+            quaternary
+            size="small"
+            :disabled="confirmLoading"
+            @click="closeConfirmDialog"
+          >
+            {{ t('common.cancel') }}
+          </NButton>
+          <NButton
+            type="error"
+            size="small"
+            :loading="confirmLoading"
+            @click="handleConfirmDelete"
+          >
+            {{ t('remote.confirmDelete') }}
+          </NButton>
+        </div>
+      </NCard>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { h, resolveComponent } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
+import { h } from 'vue'
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NModal,
+  NTag,
+  NIcon,
+  useMessage,
+  type DataTableColumns
+} from 'naive-ui'
+import { Add } from '@vicons/ionicons5'
 import type { RemoteEnvironmentRecord } from '#shared/types/remote'
 
 const { t } = useI18n()
@@ -106,49 +135,49 @@ const remoteStore = useRemoteStore()
 const { environments } = storeToRefs(remoteStore)
 const { fetchOverview, testConnection, deleteEnvironment } = remoteStore
 
-const toast = useToast()
+const message = useMessage()
 
-// 状态
-// UTable 列定义（Nuxt UI v4）
-const UBadge = resolveComponent('UBadge')
-const UButton = resolveComponent('UButton')
-
-const hostColumns: TableColumn<RemoteEnvironmentRecord>[] = [
+// 状态 & 表格列（Naive UI NDataTable）
+const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
   {
-    id: 'title',
-    accessorKey: 'title',
-    header: t('remote.name')
+    key: 'title',
+    title: t('remote.name')
   },
   {
-    id: 'address',
-    header: t('remote.address'),
-    cell: ({ row }) => h('span', { class: 'text-sm font-mono' }, `${row.original.host}:${row.original.port || 22}`)
-  },
-  {
-    accessorKey: 'username',
-    header: t('remote.username')
-  },
-  {
-    id: 'auth',
-    header: t('remote.authMethod'),
-    cell: ({ row }) =>
-      h(
-        UBadge as any,
-        {
-          color: row.original.auth?.type === 'privateKey' ? 'secondary' : 'success',
-          size: 'md',
-        },
-        {
-          default: () =>
-            row.original.auth?.type === 'privateKey' ? t('remote.privateKeyAuth') : t('remote.passwordAuth'),
-        },
+    key: 'address',
+    title: t('remote.address'),
+    render(row) {
+      return h(
+        'span',
+        { class: 'text-sm font-mono' },
+        `${row.host}:${row.port || 22}`
       )
+    }
   },
   {
-    id: 'status',
-    header: t('remote.testStatus'),
-    cell: ({ row }) => {
-      const env = row.original
+    key: 'username',
+    title: t('remote.username')
+  },
+  {
+    key: 'auth',
+    title: t('remote.authMethod'),
+    render(row) {
+      const isPrivateKey = row.auth?.type === 'privateKey'
+      const type = isPrivateKey ? 'info' : 'success'
+      const label = isPrivateKey ? t('remote.privateKeyAuth') : t('remote.passwordAuth')
+
+      return h(
+        NTag,
+        { type, size: 'small', round: true },
+        { default: () => label }
+      )
+    }
+  },
+  {
+    key: 'status',
+    title: t('remote.testStatus'),
+    render(row) {
+      const env = row
       if (!env.lastTestAt) {
         return h(
           'span',
@@ -180,9 +209,9 @@ const hostColumns: TableColumn<RemoteEnvironmentRecord>[] = [
 
       return h('div', { class: 'flex items-center gap-2' }, [
         h(
-          UBadge as any,
-          { color, size: 'md' },
-          { default: () => label },
+          NTag,
+          { type: color as any, size: 'small', round: true },
+          { default: () => label }
         ),
         latencyText
           ? h(
@@ -195,13 +224,43 @@ const hostColumns: TableColumn<RemoteEnvironmentRecord>[] = [
     }
   },
   {
-    id: 'actions',
-    header: () => h('div', { class: 'text-right' }, t('remote.actions')),
-    cell: ({ row }) => h('div', { class: 'flex gap-2 justify-end' }, [
-      h(UButton as any, { size: 'xs', variant: 'ghost', icon: 'i-heroicons-arrow-path', loading: testingConnections.value[row.original.id], onClick: () => handleTestConnection(row.original.id) }, { default: () => t('remote.testConnection') }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', onClick: () => openHostModal(row.original) }, { default: () => t('common.edit') }),
-      h(UButton as any, { size: 'xs', variant: 'ghost', color: 'red', disabled: testingConnections.value[row.original.id], onClick: () => handleDeleteHost(row.original) }, { default: () => t('common.delete') })
-    ])
+    key: 'actions',
+    title: t('remote.actions'),
+    align: 'right',
+    render(row) {
+      return h('div', { class: 'flex justify-end gap-2' }, [
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            loading: testingConnections.value[row.id],
+            onClick: () => handleTestConnection(row.id)
+          },
+          { default: () => t('remote.testConnection') }
+        ),
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            onClick: () => openHostModal(row)
+          },
+          { default: () => t('common.edit') }
+        ),
+        h(
+          NButton,
+          {
+            size: 'tiny',
+            tertiary: true,
+            type: 'error',
+            disabled: testingConnections.value[row.id],
+            onClick: () => handleDeleteHost(row)
+          },
+          { default: () => t('common.delete') }
+        )
+      ])
+    }
   }
 ]
 
@@ -251,21 +310,13 @@ const handleConfirmDelete = async () => {
   try {
     confirmLoading.value = true
     await deleteEnvironment(confirmDialog.value.host.id)
-    toast.add({
-      title: t('remote.deleteSuccess'),
-      description: t('remote.hostDeleted', { name: confirmDialog.value.host.title }),
-      color: 'success',
-      icon: 'i-heroicons-check-circle',
-    })
+    message.success(
+      t('remote.hostDeleted', { name: confirmDialog.value.host.title || '' })
+    )
     confirmDialog.value = { open: false }
   }
   catch (error: any) {
-    toast.add({
-      title: t('remote.deleteError'),
-      description: error.message,
-      color: 'error',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    message.error(error?.message || t('remote.deleteError'))
   }
   finally {
     confirmLoading.value = false
@@ -278,29 +329,16 @@ const handleTestConnection = async (id: string) => {
   try {
     const result = await testConnection(id)
     if (result.ok) {
-      toast.add({
-        title: t('remote.testSuccess'),
-        description: `${t('remote.latency')}: ${result.latencyMs}ms`,
-        color: 'success',
-        icon: 'i-heroicons-check-circle',
-      })
+      message.success(
+        `${t('remote.testSuccess')} (${t('remote.latency')}: ${result.latencyMs}ms)`
+      )
     }
     else {
-      toast.add({
-        title: t('remote.testFailed'),
-        description: result.error,
-        color: 'error',
-        icon: 'i-heroicons-x-circle',
-      })
+      message.error(result.error || t('remote.testFailed'))
     }
   }
   catch (err: any) {
-    toast.add({
-      title: t('remote.testError'),
-      description: err?.message || t('remote.testError'),
-      color: 'error',
-      icon: 'i-heroicons-exclamation-circle',
-    })
+    message.error(err?.message || t('remote.testError'))
   }
   finally {
     testingConnections.value[id] = false

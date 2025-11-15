@@ -1,42 +1,42 @@
 <template>
-  <UForm :state="formState" @submit="handleSubmit" class="space-y-6">
+  <NForm :model="formState" @submit.prevent="handleSubmit" class="space-y-6">
     <!-- 基本信息 -->
     <div class="space-y-4">
-      <UFormField :label="t('codex.mcpForm.serviceNameLabel')" name="name" required>
-        <UInput
+      <NFormItem :label="t('codex.mcpForm.serviceNameLabel')" path="name" :required="true">
+        <NInput
           v-model="formState.name"
           :placeholder="t('codex.mcpForm.serviceNamePlaceholder')"
           :disabled="submitting || isEditMode"
-          size="lg"
+          size="large"
           class="w-full"
         />
         <template #help>
           <span class="text-xs text-gray-500">{{ t('codex.mcpForm.serviceNameHelp') }}</span>
         </template>
-      </UFormField>
+      </NFormItem>
 
-      <UFormField :label="t('codex.mcpForm.displayNameLabel')" name="displayName">
-        <UInput
+      <NFormItem :label="t('codex.mcpForm.displayNameLabel')" path="displayName">
+        <NInput
           v-model="formState.displayName"
           :placeholder="t('codex.mcpForm.displayNamePlaceholder')"
           :disabled="submitting"
-          size="lg"
+          size="large"
           class="w-full"
         />
-      </UFormField>
+      </NFormItem>
 
-      <UFormField :label="t('codex.mcpForm.docUrlLabel')" name="docUrl">
-        <UInput
+      <NFormItem :label="t('codex.mcpForm.docUrlLabel')" path="docUrl">
+        <NInput
           v-model="formState.docUrl"
           type="url"
           :placeholder="t('codex.mcpForm.docUrlPlaceholder')"
           :disabled="submitting"
-          size="lg"
+          size="large"
           class="w-full"
         />
-      </UFormField>
+      </NFormItem>
 
-      <UCheckbox
+      <NCheckbox
         v-model="formState.enabled"
         :label="t('codex.mcpForm.enableService')"
         :disabled="submitting"
@@ -45,7 +45,9 @@
 
     <!-- MCP 配置（TOML） -->
     <div class="space-y-3">
-      <h3 class="text-lg font-semibold">{{ t('codex.mcpForm.mcpConfigTitle') }} (TOML)</h3>
+      <h3 class="text-lg font-semibold">
+        {{ t('codex.mcpForm.mcpConfigTitle') }} (TOML)
+      </h3>
       <SharedCodeEditor
         v-model="mcpToml"
         language="toml"
@@ -55,19 +57,27 @@
     </div>
 
     <!-- 错误提示 -->
-    <UAlert
+    <NAlert
       v-if="formError"
-      color="red"
-      variant="soft"
-      :title="formError"
-      icon="i-heroicons-exclamation-circle"
-    />
+      type="error"
+      :show-icon="true"
+    >
+      {{ formError }}
+    </NAlert>
 
-    <!-- 操作按钮移至父级 UModal.footer -->
-  </UForm>
+    <!-- 操作按钮移至父级弹窗 footer -->
+  </NForm>
 </template>
 
 <script setup lang="ts">
+import {
+  NAlert,
+  NCheckbox,
+  NForm,
+  NFormItem,
+  NInput,
+  useMessage
+} from 'naive-ui'
 import type { CodexMcpRecord } from '#shared/types/codex'
 import { useCodexStore } from '~/stores/codex'
 
@@ -77,7 +87,7 @@ const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
 const { upsertMcpServer } = useCodexStore()
-const toast = useToast()
+const message = useMessage()
 
 const isEditMode = computed(() => Boolean(props.initialValue))
 
@@ -118,14 +128,11 @@ const handleSubmit = async () => {
 
     await upsertMcpServer(payload)
 
-    toast.add({
-      title: isEditMode.value ? t('codex.form.updateSuccess') : t('codex.form.createSuccess'),
-      description: isEditMode.value
+    message.success(
+      isEditMode.value
         ? t('codex.mcpForm.mcpUpdated', { name: formState.displayName || formState.name })
-        : t('codex.mcpForm.mcpCreated', { name: formState.displayName || formState.name }),
-      color: 'success',
-      icon: 'i-heroicons-check-circle',
-    })
+        : t('codex.mcpForm.mcpCreated', { name: formState.displayName || formState.name })
+    )
     emit('close')
   } catch (error: any) {
     formError.value = error.message || t('codex.form.operationFailed')
@@ -134,7 +141,7 @@ const handleSubmit = async () => {
   }
 }
 
-// 暴露方法给父级 UModal 调用，保持与 EnvironmentForm 一致
+// 暴露方法给父级弹窗调用，保持与 EnvironmentForm 一致
 defineExpose({
   submit: () => handleSubmit(),
   submitting,

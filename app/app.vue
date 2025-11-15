@@ -1,11 +1,25 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import {
+  NButton,
+  NConfigProvider,
+  NDialogProvider,
+  NGlobalStyle,
+  NLoadingBarProvider,
+  NMessageProvider,
+  NNotificationProvider
+} from 'naive-ui'
 
 const route = useRoute()
 const appConfig = useAppConfig()
 const { t } = useI18n()
 
-const items = computed<NavigationMenuItem[]>(() => [
+interface NavItem {
+  label: string
+  to: string
+  active: boolean
+}
+
+const items = computed<NavItem[]>(() => [
   {
     label: t('nav.claude'),
     to: '/claude',
@@ -24,45 +38,88 @@ const items = computed<NavigationMenuItem[]>(() => [
 ])
 
 const version = appConfig.version
+
+// Naive UI 主题（暗色/亮色 + 主色/圆角）
 </script>
 
 <template>
-  <UApp>
-    <UHeader :title="t('app.title')">
+  <!-- 全局 Naive UI Provider：主题 + 消息/通知/对话框/加载条 -->
+  <n-config-provider>
+    <n-dialog-provider>
+      <n-notification-provider>
+        <n-message-provider>
+          <n-loading-bar-provider>
+            <div class="min-h-[100dvh] flex flex-col bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
+              <!-- 顶部导航栏 -->
+              <header class="border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-800/80 dark:bg-neutral-950/80">
+                <div class="container mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold">{{ t('app.title') }}</span>
+                  </div>
 
-      <template #right>
-        <UNavigationMenu :items="items" />
-        <SharedPrimaryColorSwitcher />
-      </template>
-    </UHeader>
+                  <nav class="flex items-center gap-3">
+                    <NuxtLink
+                      v-for="item in items"
+                      :key="item.to"
+                      :to="item.to"
+                      :class="[
+                        'text-sm transition-colors',
+                        item.active
+                          ? 'text-primary-500 font-medium'
+                          : 'text-muted hover:text-neutral-100'
+                      ]"
+                    >
+                      {{ item.label }}
+                    </NuxtLink>
 
-    <!-- 覆盖 UMain 最小高度，扣除 Header、Footer 与分隔条高度，避免首页出现滚动条 -->
-    <UMain class="min-h-[calc(100dvh-var(--ui-header-height)-var(--app-footer-h,64px)-var(--app-sep-h,1px))]">
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
-    </UMain>
+                    <SharedPrimaryColorSwitcher />
+                  </nav>
+                </div>
+              </header>
 
-    <USeparator icon="i-simple-icons-nuxtdotjs" type="dashed" class="h-px" />
+              <!-- 主内容区域 -->
+              <main class="flex-1">
+                <NuxtLayout>
+                  <NuxtPage />
+                </NuxtLayout>
+              </main>
 
-    <UFooter>
-      <template #left>
-        <p class="text-muted text-sm">
-          {{ t('footer.copyright') }} © {{ new Date().getFullYear() }} · v{{ version }}
-        </p>
-      </template>
+              <!-- 顶部分隔线 -->
+              <div class="h-px border-t border-dashed border-neutral-800/80" />
 
-      <template #right>
-        <UButton
-          icon="i-simple-icons-github"
-          color="neutral"
-          variant="ghost"
-          to="https://github.com/imaping/ai-switch"
-          target="_blank"
-          aria-label="GitHub"
-        />
-        <SharedLanguageSwitcher />
-      </template>
-    </UFooter>
-  </UApp>
+              <!-- 页脚 -->
+              <footer
+                class="flex h-[var(--app-footer-h,64px)] items-center bg-white/95 px-4 text-sm text-muted dark:bg-neutral-950/95"
+              >
+                <div class="container mx-auto flex max-w-7xl items-center justify-between">
+                  <p>
+                    {{ t('footer.copyright') }} ©
+                    {{ new Date().getFullYear() }} · v{{ version }}
+                  </p>
+
+                  <div class="flex items-center gap-3">
+                    <NButton
+                      quaternary
+                      size="small"
+                      tag="a"
+                      href="https://github.com/imaping/ai-switch"
+                      target="_blank"
+                      aria-label="GitHub"
+                    >
+                      <span class="i-simple-icons-github mr-1 inline-block h-4 w-4" />
+                      GitHub
+                    </NButton>
+                    <SharedLanguageSwitcher />
+                  </div>
+                </div>
+              </footer>
+            </div>
+
+            <!-- 同步全局样式（如 body 背景等） -->
+            <NGlobalStyle />
+          </n-loading-bar-provider>
+        </n-message-provider>
+      </n-notification-provider>
+    </n-dialog-provider>
+  </n-config-provider>
 </template>
