@@ -5,25 +5,24 @@ import {
   NDialogProvider,
   NGlobalStyle,
   NLoadingBarProvider,
-  NLayout,
   NLayoutContent,
   NLayoutFooter,
   NLayoutHeader,
   NMessageProvider,
+  NIcon,
   NNotificationProvider,
-  NMenu
+  NMenu,
+  darkTheme,
+  type GlobalThemeOverrides
 } from 'naive-ui'
-
+LogoGithub
+import { LogoGithub } from '@vicons/ionicons5'
 import type { MenuOption } from 'naive-ui'
-const route = useRoute()
+import { storeToRefs } from 'pinia'
+import { useUiStore } from '~/stores/ui'
+
 const appConfig = useAppConfig()
 const { t } = useI18n()
-
-interface NavItem {
-  label: string
-  to: string
-  active: boolean
-}
 
 const items = computed<MenuOption[]>(() => [
   {
@@ -61,10 +60,36 @@ const items = computed<MenuOption[]>(() => [
 
 const version = appConfig.version
 
+const uiStore = useUiStore()
+const { isDark, enablePageTransition, appTheme, pageAnimateType } = storeToRefs(uiStore)
+
+onMounted(() => {
+  uiStore.init()
+})
+
+const naiveTheme = computed(() => (isDark.value ? darkTheme : null))
+
+const themeOverrides = computed<GlobalThemeOverrides>(() => ({
+  common: {
+    primaryColor: appTheme.value,
+    primaryColorHover: appTheme.value,
+    primaryColorPressed: appTheme.value,
+    primaryColorSuppl: appTheme.value
+  }
+}))
+
+const pageTransition = computed(() =>
+  enablePageTransition.value
+    ? { name: pageAnimateType.value, mode: 'out-in' as const }
+    : false
+)
 </script>
 
 <template>
-  <n-config-provider>
+  <n-config-provider
+    :theme="naiveTheme"
+    :theme-overrides="themeOverrides"
+  >
     <n-dialog-provider>
       <n-notification-provider>
         <n-message-provider>
@@ -82,16 +107,19 @@ const version = appConfig.version
                     {{ t('app.title') }}
                   </NuxtLink>
 
-                  <nav class="flex gap-1">
-                    <n-menu :options="items" mode="horizontal"/>
-                  </nav>
+                  <div class="flex items-center gap-3">
+                    <nav class="flex gap-1">
+                      <n-menu :options="items" mode="horizontal" />
+                    </nav>
+                    <SharedProjectSetting />
+                  </div>
                 </div>
               </n-layout-header>
 
               <n-layout-content>
                 <main class="w-full max-w-7xl mx-auto px-6 pt-8 pb-0">
                   <NuxtLayout>
-                    <NuxtPage />
+                    <NuxtPage :transition="pageTransition" />
                   </NuxtLayout>
                 </main>
               </n-layout-content>
@@ -118,8 +146,9 @@ const version = appConfig.version
                         aria-label="GitHub"
                         class="text-gray-600! hover:text-gray-900! transition-colors"
                       >
-                        <span class="i-carbon-logo-github text-lg mr-1"/>
-                        GitHub
+                        <template #icon>
+                          <n-icon><LogoGithub /></n-icon>
+                        </template>
                       </NButton>
                       <div class="h-4 w-px bg-gray-300"></div>
                       <SharedLanguageSwitcher />

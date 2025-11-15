@@ -22,7 +22,7 @@
             @update:value="envScopeStore.setScope"
           />
           <NButton
-            type="info"
+            type="primary"
             size="small"
             @click="openGeneralModal"
           >

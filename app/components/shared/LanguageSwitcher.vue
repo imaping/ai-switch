@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NDropdown } from 'naive-ui'
+import { NButton, NDropdown,NIcon } from 'naive-ui'
+import { Language } from '@vicons/ionicons5'
 
 const { locale, locales, setLocale } = useI18n()
 
@@ -22,8 +23,9 @@ const currentLocale = computed(() => {
 <template>
   <NDropdown :options="availableLocales" trigger="click">
     <NButton quaternary size="small">
-      <span>{{ currentLocale }}</span>
-      <span class="i-heroicons-chevron-down-20-solid ml-1 inline-block h-4 w-4" />
+      <template #icon>
+        <n-icon><Language /></n-icon>
+      </template>
     </NButton>
   </NDropdown>
 </template>
