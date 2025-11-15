@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 
 const packageJson = JSON.parse(
   readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
@@ -57,6 +58,8 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    // 启用 Tailwind v4 官方推荐的 Vite 插件
+    plugins: [tailwindcss()],
     // Vite 相关配置：保留原有 optimizeDeps，并为 Naive UI 配置 SSR noExternal
     optimizeDeps: {
       // 排除 native 模块和服务器端依赖

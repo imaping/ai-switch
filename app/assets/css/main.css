@@ -1,12 +1,1 @@
-/*
- * 全局样式入口（Tailwind v4 + Nuxt UI）
- * - 为组件与实用类（如 bg-gray-900、container 等）提供样式支持
- * - 解决页面“无样式/全是纯文本”的问题
- */
 @import "tailwindcss";
-
-/* 自定义应用级高度变量（可按需调节） */
-:root {
-  --app-footer-h: 64px; /* UFooter 预估高度 */
-  --app-sep-h: 1px;     /* 顶部分隔线高度 */
-}
