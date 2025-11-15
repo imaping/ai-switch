@@ -11,9 +11,6 @@
       @ready="handleReady"
       @change="handleChange"
     />
-    <div v-if="error" class="mt-2">
-      <UAlert color="red" variant="soft" :title="error" icon="i-heroicons-exclamation-circle" />
-    </div>
   </div>
 </template>
 

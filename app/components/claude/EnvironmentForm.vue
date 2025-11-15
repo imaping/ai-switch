@@ -51,6 +51,7 @@
           <NInput
             v-model="formState.apiKey"
             type="password"
+            show-password-on="click"
             :placeholder="t('claude.form.apiKeyPlaceholder')"
             :disabled="submitting"
             size="large"
@@ -85,7 +86,7 @@
     </div>
 
     <!-- 余额查询配置(可选) -->
-    <NCollapse class="w-full flex flex-col gap-2" :default-expanded-names="balanceExpanded ? ['balance'] : []" @update:expanded-names="onBalanceExpandedChange">
+    <NCollapse class="w-full flex flex-col gap-2" :default-expanded-names="balanceExpanded ? ['balance'] : []">
       <NCollapseItem :title="t('claude.form.balanceConfigTitle')" name="balance">
         <div class="space-y-4 p-4">
           <NFormItem :label="t('claude.form.balanceUrlLabel')" path="balanceUrl">
