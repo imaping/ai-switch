@@ -255,9 +255,7 @@ const { environments: remoteEnvs } = storeToRefs(remoteStore)
 const {
   environments,
   generalConfig,
-  mcpServers,
-  loading,
-  error,
+  mcpServers
 } = storeToRefs(codexStore)
 const { fetchOverview, activateEnvironment, toggleMcpServer, deleteEnvironment } = codexStore
 const message = useMessage()
@@ -352,7 +350,6 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
       return h(NSwitch, {
         value: row.status === 'active',
         size: 'large',
-        disabled: loading.value,
         'onUpdate:value': (val: boolean) => handleToggleEnv(row, val)
       })
     }
@@ -369,7 +366,6 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
             circle:true,
             size: 'tiny',
             type:'info',
-            disabled: loading.value,
             onClick: () => handleQueryAllBalances()
           },
           {
@@ -400,7 +396,6 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
             circle:true,
             size: 'tiny',
             type:'info',
-            disabled: loading.value,
             onClick: () => handleQueryBalance(env)
           },
           {
@@ -497,7 +492,6 @@ const mcpColumns: DataTableColumns<CodexMcpRecord> = [
       return h(NSwitch, {
         value: row.enabled,
         size: 'large',
-        disabled: loading.value,
         'onUpdate:value': (val: boolean) => handleToggleMcp(row, val)
       })
     }
@@ -532,15 +526,6 @@ const mcpColumns: DataTableColumns<CodexMcpRecord> = [
     }
   }
 ]
-
-const handleActivateEnv = async (record: CodexEnvironmentRecord) => {
-  try {
-    await activateEnvironment(record.id)
-  }
-  catch (err: any) {
-    console.error('激活环境失败:', err.message)
-  }
-}
 
 const handleToggleMcp = async (record: CodexMcpRecord, next?: boolean) => {
   try {

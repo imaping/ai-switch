@@ -257,7 +257,6 @@ const {
   environments,
   generalConfig,
   mcpServers,
-  loading,
 } = storeToRefs(claudeStore)
 const {
   fetchOverview,
@@ -349,7 +348,6 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
       return h(NSwitch, {
         value: row.status === 'active',
         size: 'large',
-        disabled: loading.value,
         'onUpdate:value': (val: boolean) => handleToggleEnv(row, val)
       })
     }
@@ -366,7 +364,6 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
             circle:true,
             size: 'tiny',
             type:'info',
-            disabled: loading.value,
             onClick: () => handleQueryAllBalances()
           },
           {
@@ -391,7 +388,6 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
             circle:true,
             size: 'tiny',
             type:'info',
-            disabled: loading.value,
             onClick: () => handleQueryBalance(env)
           },
           {
@@ -488,7 +484,6 @@ const mcpColumns: DataTableColumns<ClaudeMcpRecord> = [
       return h(NSwitch, {
         value: row.enabled,
         size: 'large',
-        disabled: loading.value,
         'onUpdate:value': (val: boolean) => handleToggleMcp(row, val)
       })
     }
