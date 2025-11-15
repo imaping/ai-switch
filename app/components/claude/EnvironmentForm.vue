@@ -70,8 +70,7 @@
             :label="t('claude.form.writeToCommon')"
             :disabled="submitting"
           />
-          <NButton quaternary size="tiny" @click="openCommonConfig">
-            <span class="i-heroicons-cog-6-tooth mr-1 inline-block h-4 w-4" />
+          <NButton quaternary type="primary" @click="openCommonConfig">
             {{ t('claude.generalConfigManagement') }}
           </NButton>
         </div>

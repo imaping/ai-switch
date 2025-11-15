@@ -68,8 +68,7 @@
           <NCheckbox v-model="formState.writeToCommon" :disabled="submitting">
             {{ t('codex.form.writeToCommon') }}
           </NCheckbox>
-          <NButton quaternary size="tiny" @click="openGeneralConfig">
-            <span class="i-heroicons-cog-6-tooth mr-1 inline-block h-4 w-4" />
+          <NButton quaternary type="primary" @click="openGeneralConfig">
             {{ t('codex.generalConfigManagement') }}
           </NButton>
         </div>
