@@ -20,12 +20,10 @@ export const useCodexStore = defineStore('codex', {
     generalConfig: undefined as CodexGeneralConfig | undefined,
     mcpServers: [] as CodexMcpRecord[],
     activeId: undefined as string | undefined,
-    loading: false,
     error: undefined as string | undefined,
   }),
   actions: {
     async fetchOverview() {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -39,13 +37,10 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '获取 Codex 概览失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
     async createEnvironment(payload: Omit<CodexEnvironmentRecord, 'id'>) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -58,13 +53,10 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '创建 Codex 环境失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
     async updateEnvironment(id: string, payload: Partial<CodexEnvironmentRecord>) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -78,13 +70,10 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '更新 Codex 环境失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
     async deleteEnvironment(id: string) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -96,13 +85,10 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '删除 Codex 环境失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
     async activateEnvironment(id: string) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -117,8 +103,6 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '激活 Codex 环境失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
@@ -149,7 +133,6 @@ export const useCodexStore = defineStore('codex', {
     },
 
     async updateGeneralConfig(content: string | Record<string, unknown>) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -165,13 +148,10 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '更新通用配置失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
     async upsertMcpServer(payload: any) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -190,13 +170,10 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '保存 MCP 服务失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
     async toggleMcpServer(id: string, enabled: boolean) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -213,13 +190,10 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '切换 MCP 服务状态失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
 
     async deleteMcpServer(id: string) {
-      this.loading = true
       this.error = undefined
       try {
         const scopeStore = useEnvScopeStore()
@@ -230,8 +204,6 @@ export const useCodexStore = defineStore('codex', {
       } catch (err: any) {
         this.error = err?.message || '删除 MCP 服务失败'
         throw err
-      } finally {
-        this.loading = false
       }
     },
   },

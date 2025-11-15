@@ -22,7 +22,7 @@
             @update:value="envScopeStore.setScope"
           />
           <NButton
-            secondary
+            type="info"
             size="small"
             @click="openGeneralModal"
           >
@@ -52,10 +52,10 @@
       </template>
 
       <NDataTable
-          :data="environments"
-          :columns="envColumns"
-          :bordered="false"
-          :single-line="false"
+        striped
+        :data="environments"
+        :columns="envColumns"
+        :bordered="false"
       />
     </NCard>
 
@@ -79,10 +79,10 @@
       </template>
 
       <NDataTable
+        striped
         :data="mcpServers"
         :columns="mcpColumns"
         :bordered="false"
-        :single-line="false"
       />
     </NCard>
 
@@ -420,8 +420,8 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             onClick: () => openEnvModal(row)
           },
           { default: () => t('common.edit') }
@@ -429,8 +429,8 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             onClick: () =>
               openEnvModal(
                 { ...row, title: `${row.title || ''}(副本)` } as CodexEnvironmentRecord,
@@ -442,8 +442,8 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             type: 'error',
             disabled: row.status === 'active',
             onClick: () => handleDeleteEnv(row)
@@ -511,8 +511,8 @@ const mcpColumns: DataTableColumns<CodexMcpRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             onClick: () => openMcpModal(row)
           },
           { default: () => t('common.edit') }
@@ -520,8 +520,8 @@ const mcpColumns: DataTableColumns<CodexMcpRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             type: 'error',
             disabled: row.enabled,
             onClick: () => handleDeleteMcp(row)

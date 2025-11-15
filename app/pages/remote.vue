@@ -35,10 +35,10 @@
       </template>
 
       <NDataTable
-          :data="environments"
-          :columns="hostColumns"
-          :bordered="false"
-          :single-line="false"
+        striped
+        :data="environments"
+        :columns="hostColumns"
+        :bordered="false"
         />
     </NCard>
 
@@ -168,7 +168,7 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
 
       return h(
         NTag,
-        { type, size: 'small', round: true },
+        { type, size: 'small', bordered:false },
         { default: () => label }
       )
     }
@@ -210,7 +210,7 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
       return h('div', { class: 'flex items-center gap-2' }, [
         h(
           NTag,
-          { type: color as any, size: 'small', round: true },
+          { type: color as any, size: 'small', bordered:false },
           { default: () => label }
         ),
         latencyText
@@ -232,8 +232,8 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             loading: testingConnections.value[row.id],
             onClick: () => handleTestConnection(row.id)
           },
@@ -242,8 +242,8 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             onClick: () => openHostModal(row)
           },
           { default: () => t('common.edit') }
@@ -251,8 +251,8 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
         h(
           NButton,
           {
-            size: 'tiny',
-            tertiary: true,
+            size: 'small',
+            quaternary: true,
             type: 'error',
             disabled: testingConnections.value[row.id],
             onClick: () => handleDeleteHost(row)
