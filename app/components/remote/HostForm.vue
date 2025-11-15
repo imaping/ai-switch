@@ -4,7 +4,7 @@
     <div class="space-y-4">
       <NFormItem :label="t('remote.hostForm.titleLabel')" path="title" :required="true">
         <NInput
-          v-model="formState.title"
+          v-model:value="formState.title"
           :placeholder="t('remote.hostForm.titlePlaceholder')"
           :disabled="submitting"
           size="large"
@@ -14,7 +14,7 @@
 
       <NFormItem :label="t('remote.hostForm.descriptionLabel')" path="description">
         <NInput
-          v-model="formState.description"
+          v-model:value="formState.description"
           :placeholder="t('remote.hostForm.descriptionPlaceholder')"
           type="textarea"
           :rows="2"
@@ -26,7 +26,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <NFormItem :label="t('remote.hostForm.hostLabel')" path="host" :required="true" class="md:col-span-2">
           <NInput
-            v-model="formState.host"
+            v-model:value="formState.host"
             :placeholder="t('remote.hostForm.hostPlaceholder')"
             :disabled="submitting"
             size="large"
@@ -35,12 +35,12 @@
         </NFormItem>
 
         <NFormItem :label="t('remote.hostForm.portLabel')" path="port" :required="true">
-          <NInput
-            v-model.number="formState.port"
-            type="number"
+          <n-input-number
+            v-model:value="formState.port"
             :placeholder="t('remote.hostForm.portPlaceholder')"
             :disabled="submitting"
             size="large"
+            clearable
             class="w-full"
           />
         </NFormItem>
@@ -48,7 +48,7 @@
 
       <NFormItem :label="t('remote.hostForm.usernameLabel')" path="username" :required="true">
           <NInput
-            v-model="formState.username"
+            v-model:value="formState.username"
             :placeholder="t('remote.hostForm.usernamePlaceholder')"
             :disabled="submitting"
             size="large"
@@ -62,7 +62,7 @@
       <NFormItem :label="t('remote.hostForm.authMethodLabel')" path="authType" :required="true">
         <NSelect
           class="w-full"
-          v-model="formState.authType"
+          v-model:value="formState.authType"
           :options="authTypeOptions"
           :disabled="submitting"
         />
@@ -76,7 +76,7 @@
         required
       >
         <NInput
-          v-model="formState.password"
+          v-model:value="formState.password"
           type="password"
           :placeholder="t('remote.hostForm.passwordPlaceholder')"
           :disabled="submitting"
@@ -89,7 +89,7 @@
       <template v-else>
         <NFormItem :label="t('remote.hostForm.privateKeyPathLabel')" path="privateKeyPath">
           <NInput
-            v-model="formState.privateKeyPath"
+            v-model:value="formState.privateKeyPath"
             :placeholder="t('remote.hostForm.privateKeyPathPlaceholder')"
             :disabled="submitting"
             size="large"
@@ -99,7 +99,7 @@
 
         <NFormItem :label="t('remote.hostForm.privateKeyContentLabel')" path="privateKey">
           <NInput
-            v-model="formState.privateKey"
+            v-model:value="formState.privateKey"
             type="textarea"
             :placeholder="t('remote.hostForm.privateKeyContentPlaceholder')"
             :rows="6"
@@ -110,7 +110,7 @@
 
         <NFormItem :label="t('remote.hostForm.passphraseLabel')" path="passphrase">
           <NInput
-            v-model="formState.passphrase"
+            v-model:value="formState.passphrase"
             type="password"
             :placeholder="t('remote.hostForm.passphrasePlaceholder')"
             :disabled="submitting"
@@ -140,6 +140,7 @@ import {
   NForm,
   NFormItem,
   NInput,
+  NInputNumber,
   NSelect,
   useMessage
 } from 'naive-ui'

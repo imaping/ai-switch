@@ -31,6 +31,13 @@ const message = useMessage()
 
 const tomlText = ref<string>(props.initialValue ?? '')
 
+// 监听 initialValue 变化，更新表单内容
+watch(() => props.initialValue, (newValue) => {
+  if (newValue !== undefined) {
+    tomlText.value = newValue
+  }
+}, { immediate: false })
+
 const submit = async () => {
   await store.updateGeneralConfig(tomlText.value)
   message.success(t('codex.generalConfigForm.configUpdated'))

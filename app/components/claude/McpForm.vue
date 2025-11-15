@@ -4,7 +4,7 @@
     <div class="space-y-4">
       <NFormItem :label="t('claude.mcpForm.serviceNameLabel')" path="name" :required="true">
         <NInput
-          v-model="formState.name"
+          v-model:value="formState.name"
           :placeholder="t('claude.mcpForm.serviceNamePlaceholder')"
           :disabled="submitting || isEditMode"
           size="large"
@@ -17,7 +17,7 @@
 
       <NFormItem :label="t('claude.mcpForm.displayNameLabel')" path="displayName">
         <NInput
-          v-model="formState.displayName"
+          v-model:value="formState.displayName"
           :placeholder="t('claude.mcpForm.displayNamePlaceholder')"
           :disabled="submitting"
           size="large"
@@ -27,8 +27,7 @@
 
       <NFormItem :label="t('claude.mcpForm.docUrlLabel')" path="docUrl">
         <NInput
-          v-model="formState.docUrl"
-          type="url"
+          v-model:value="formState.docUrl"
           :placeholder="t('claude.mcpForm.docUrlPlaceholder')"
           :disabled="submitting"
           size="large"
@@ -37,7 +36,7 @@
       </NFormItem>
 
       <NCheckbox
-        v-model="formState.enabled"
+        v-model:checked="formState.enabled"
         :label="t('claude.mcpForm.enableService')"
         :disabled="submitting"
       />
@@ -99,13 +98,16 @@ const message = useMessage()
 
 const isEditMode = computed(() => Boolean(props.initialValue))
 
-// 表单状态
-const formState = reactive({
+// 表单状态初始化函数
+const initFormState = () => ({
   name: props.initialValue?.name || '',
   displayName: props.initialValue?.displayName || '',
   docUrl: props.initialValue?.docUrl || '',
   enabled: props.initialValue?.enabled ?? true,
 })
+
+// 表单状态
+const formState = reactive(initFormState())
 
 // MCP 配置
 const defaultMcpConfig = {
@@ -121,6 +123,19 @@ const mcpConfigJson = ref(
 const submitting = ref(false)
 const formError = ref<string>()
 const codeError = ref<string | null>(null)
+
+// 监听 initialValue 变化，重新初始化表单状态
+watch(() => props.initialValue, (newValue) => {
+  if (newValue) {
+    Object.assign(formState, initFormState())
+    // 同时更新 mcpConfigJson
+    mcpConfigJson.value = JSON.stringify(
+      newValue.config || defaultMcpConfig,
+      null,
+      2
+    )
+  }
+}, { deep: true, immediate: false })
 
 const handleCodeError = (error: string | null) => {
   codeError.value = error

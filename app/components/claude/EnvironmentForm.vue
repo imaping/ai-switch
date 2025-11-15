@@ -5,7 +5,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <NFormItem :label="t('claude.form.titleLabel')" path="title" :required="true">
           <NInput
-            v-model="formState.title"
+            v-model:value="formState.title"
             :placeholder="t('claude.form.titlePlaceholder')"
             :disabled="submitting"
             size="large"
@@ -15,8 +15,7 @@
 
         <NFormItem :label="t('claude.form.homepageLabel')" path="homepage">
           <NInput
-            v-model="formState.homepage"
-            type="url"
+            v-model:value="formState.homepage"
             :placeholder="t('claude.form.homepagePlaceholder')"
             :disabled="submitting"
             size="large"
@@ -27,7 +26,7 @@
 
       <NFormItem :label="t('claude.form.descriptionLabel')" path="description">
         <NInput
-          v-model="formState.description"
+          v-model:value="formState.description"
           :placeholder="t('claude.form.descriptionPlaceholder')"
           type="textarea"
           :rows="4"
@@ -39,7 +38,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <NFormItem :label="t('claude.form.requestUrlLabel')" path="requestUrl" :required="true">
           <NInput
-            v-model="formState.requestUrl"
+            v-model:value="formState.requestUrl"
             :placeholder="t('claude.form.requestUrlPlaceholder')"
             :disabled="submitting"
             size="large"
@@ -49,7 +48,7 @@
 
         <NFormItem :label="t('claude.form.apiKeyLabel')" path="apiKey" :required="true">
           <NInput
-            v-model="formState.apiKey"
+            v-model:value="formState.apiKey"
             type="password"
             show-password-on="click"
             :placeholder="t('claude.form.apiKeyPlaceholder')"
@@ -67,7 +66,7 @@
         <h3 class="text-lg font-semibold">{{ t('claude.form.codeConfigTitle') }}</h3>
         <div class="flex items-center gap-3">
           <NCheckbox
-            v-model="formState.writeToCommon"
+            v-model:checked="formState.writeToCommon"
             :label="t('claude.form.writeToCommon')"
             :disabled="submitting"
           />
@@ -91,7 +90,7 @@
         <div class="space-y-4 p-4">
           <NFormItem :label="t('claude.form.balanceUrlLabel')" path="balanceUrl">
             <NInput
-              v-model="formState.balanceUrl"
+              v-model:value="formState.balanceUrl"
               :placeholder="t('claude.form.balanceUrlPlaceholder')"
               :disabled="submitting"
               size="large"
@@ -102,7 +101,7 @@
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <NFormItem :label="t('claude.form.httpMethodLabel')" path="balanceMethod">
               <NSelect
-                v-model="formState.balanceMethod"
+                v-model:value="formState.balanceMethod"
                 :options="[
                   { label: 'GET', value: 'GET' },
                   { label: 'POST', value: 'POST' },
@@ -115,7 +114,7 @@
 
             <NFormItem :label="t('claude.form.jsonPathLabel')" path="balanceJsonPath">
               <NInput
-                v-model="formState.balanceJsonPath"
+                v-model:value="formState.balanceJsonPath"
                 :placeholder="t('claude.form.jsonPathPlaceholder')"
                 :disabled="submitting"
                 size="large"
@@ -126,7 +125,7 @@
 
           <NFormItem :label="t('claude.form.headersLabel')" path="balanceHeaders">
             <NInput
-              v-model="formState.balanceHeaders"
+              v-model:value="formState.balanceHeaders"
               type="textarea"
               class="w-full"
               :rows="4"
@@ -137,7 +136,7 @@
 
           <NFormItem :label="t('claude.form.bodyLabel')" path="balanceBody">
             <NInput
-              v-model="formState.balanceBody"
+              v-model:value="formState.balanceBody"
               type="textarea"
               :rows="4"
               :disabled="submitting"
@@ -146,7 +145,7 @@
 
           <NFormItem :label="t('claude.form.formulaLabel')" path="balanceFormula">
             <NInput
-              v-model="formState.balanceFormula"
+              v-model:value="formState.balanceFormula"
               :placeholder="t('claude.form.formulaPlaceholder')"
               :disabled="submitting"
               size="large"
@@ -206,8 +205,8 @@ const message = useMessage()
 
 const isEditMode = computed(() => Boolean(props.initialValue && !props.treatAsNew))
 
-// 表单状态
-const formState = reactive({
+// 表单状态初始化函数
+const initFormState = () => ({
   title: props.initialValue?.title || '',
   homepage: props.initialValue?.homepage || '',
   description: props.initialValue?.description || '',
@@ -223,6 +222,9 @@ const formState = reactive({
   balanceJsonPath: props.initialValue?.balanceJsonPath || '',
   balanceFormula: props.initialValue?.balanceFormula || '',
 })
+
+// 表单状态
+const formState = reactive(initFormState())
 
 // Code 配置
 const defaultCodeConfig = {
@@ -241,6 +243,19 @@ const submitting = ref(false)
 const formError = ref<string>()
 const codeError = ref<string | null>(null)
 const balanceExpanded = ref(false)
+
+// 监听 initialValue 变化，重新初始化表单状态
+watch(() => props.initialValue, (newValue) => {
+  if (newValue) {
+    Object.assign(formState, initFormState())
+    // 同时更新 codeConfigJson
+    codeConfigJson.value = JSON.stringify(
+      newValue.codeConfig || defaultCodeConfig,
+      null,
+      2
+    )
+  }
+}, { deep: true, immediate: false })
 
 // 监听 requestUrl 和 apiKey 变化,更新 JSON
 watch([() => formState.requestUrl, () => formState.apiKey], ([url, key]) => {

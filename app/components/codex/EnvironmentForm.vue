@@ -5,7 +5,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <NFormItem :label="t('codex.form.titleLabel')" path="title" :required="true">
           <NInput
-            v-model="formState.title"
+            v-model:model="formState.title"
             :placeholder="t('codex.form.titlePlaceholder')"
             :disabled="submitting"
             size="large"
@@ -15,8 +15,7 @@
 
         <NFormItem :label="t('codex.form.homepageLabel')" path="homepage">
           <NInput
-            v-model="formState.homepage"
-            type="url"
+            v-model:model="formState.homepage"
             :placeholder="t('codex.form.homepagePlaceholder')"
             :disabled="submitting"
             size="large"
@@ -27,7 +26,7 @@
 
       <NFormItem :label="t('codex.form.descriptionLabel')" path="description">
         <NInput
-          v-model="formState.description"
+          v-model:model="formState.description"
           :placeholder="t('codex.form.descriptionPlaceholder')"
           type="textarea"
           :rows="4"
@@ -39,7 +38,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <NFormItem label="Base URL" path="baseUrl" :required="true">
           <NInput
-            v-model="formState.baseUrl"
+            v-model:model="formState.baseUrl"
             placeholder="https://api.openai.com"
             :disabled="submitting"
             size="large"
@@ -49,7 +48,7 @@
 
         <NFormItem :label="t('codex.form.apiKeyLabel')" path="apiKey" :required="true">
           <NInput
-            v-model="formState.apiKey"
+            v-model:model="formState.apiKey"
             type="password"
             :placeholder="t('codex.form.apiKeyPlaceholder')"
             :disabled="submitting"
@@ -65,7 +64,7 @@
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold">{{ t('codex.form.codeConfigTitle') }} (TOML)</h3>
         <div class="flex items-center gap-3">
-          <NCheckbox v-model="formState.writeToCommon" :disabled="submitting">
+          <NCheckbox v-model:checked="formState.writeToCommon" :disabled="submitting">
             {{ t('codex.form.writeToCommon') }}
           </NCheckbox>
           <NButton quaternary type="primary" @click="openGeneralConfig">
@@ -92,7 +91,7 @@
         <div class="space-y-4 p-4">
           <NFormItem :label="t('codex.form.balanceUrlLabel')" path="balanceUrl">
             <NInput
-              v-model="formState.balanceUrl"
+              v-model:model="formState.balanceUrl"
               :placeholder="t('codex.form.balanceUrlPlaceholder')"
               :disabled="submitting"
               size="large"
@@ -103,7 +102,7 @@
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <NFormItem :label="t('codex.form.httpMethodLabel')" path="balanceMethod">
               <NSelect
-                v-model="formState.balanceMethod"
+                v-model:model="formState.balanceMethod"
                 :options="[
                   { label: 'GET', value: 'GET' },
                   { label: 'POST', value: 'POST' }
@@ -116,7 +115,7 @@
 
             <NFormItem :label="t('codex.form.jsonPathLabel')" path="balanceJsonPath">
               <NInput
-                v-model="formState.balanceJsonPath"
+                v-model:model="formState.balanceJsonPath"
                 :placeholder="t('codex.form.jsonPathPlaceholder')"
                 :disabled="submitting"
                 size="large"
@@ -127,7 +126,7 @@
 
           <NFormItem :label="t('codex.form.headersLabel')" path="balanceHeaders">
             <NInput
-              v-model="formState.balanceHeaders"
+              v-model:model="formState.balanceHeaders"
               type="textarea"
               class="w-full"
               :rows="4"
@@ -138,7 +137,7 @@
 
           <NFormItem :label="t('codex.form.bodyLabel')" path="balanceBody">
             <NInput
-              v-model="formState.balanceBody"
+              v-model:model="formState.balanceBody"
               type="textarea"
               :rows="4"
               :disabled="submitting"
@@ -147,7 +146,7 @@
 
           <NFormItem :label="t('codex.form.formulaLabel')" path="balanceFormula">
             <NInput
-              v-model="formState.balanceFormula"
+              v-model:model="formState.balanceFormula"
               :placeholder="t('codex.form.formulaPlaceholder')"
               :disabled="submitting"
               size="large"
@@ -210,7 +209,8 @@ const isEditMode = computed(
   () => Boolean(props.initialValue && !props.treatAsNew)
 )
 
-const formState = reactive({
+// 表单状态初始化函数
+const initFormState = () => ({
   title: props.initialValue?.title || '',
   homepage: props.initialValue?.homepage || '',
   description: props.initialValue?.description || '',
@@ -227,12 +227,24 @@ const formState = reactive({
   balanceFormula: props.initialValue?.balanceFormula || ''
 })
 
-const defaultConfig = props.initialValue?.tomlConfig || ''
+const formState = reactive(initFormState())
+
+const defaultConfig = props.initialValue?.configToml || ''
 const configToml = ref<string>(defaultConfig)
 const submitting = ref(false)
 const formError = ref<string>()
 const codeError = ref<string | null>(null)
 const balanceExpanded = ref(false)
+
+// 监听 initialValue 变化，重新初始化表单状态
+watch(() => props.initialValue, (newValue) => {
+  debugger
+  if (newValue) {
+    Object.assign(formState, initFormState())
+    // 同时更新 configToml
+    configToml.value = newValue.configToml || ''
+  }
+}, { deep: true, immediate: false })
 
 const onBalanceExpandedChange = (names: string[] | string | null) => {
   if (Array.isArray(names)) {

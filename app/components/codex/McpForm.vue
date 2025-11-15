@@ -4,7 +4,7 @@
     <div class="space-y-4">
       <NFormItem :label="t('codex.mcpForm.serviceNameLabel')" path="name" :required="true">
         <NInput
-          v-model="formState.name"
+          v-model:value="formState.name"
           :placeholder="t('codex.mcpForm.serviceNamePlaceholder')"
           :disabled="submitting || isEditMode"
           size="large"
@@ -17,7 +17,7 @@
 
       <NFormItem :label="t('codex.mcpForm.displayNameLabel')" path="displayName">
         <NInput
-          v-model="formState.displayName"
+          v-model:value="formState.displayName"
           :placeholder="t('codex.mcpForm.displayNamePlaceholder')"
           :disabled="submitting"
           size="large"
@@ -27,8 +27,7 @@
 
       <NFormItem :label="t('codex.mcpForm.docUrlLabel')" path="docUrl">
         <NInput
-          v-model="formState.docUrl"
-          type="url"
+          v-model:value="formState.docUrl"
           :placeholder="t('codex.mcpForm.docUrlPlaceholder')"
           :disabled="submitting"
           size="large"
@@ -37,7 +36,7 @@
       </NFormItem>
 
       <NCheckbox
-        v-model="formState.enabled"
+        v-model:checked="formState.enabled"
         :label="t('codex.mcpForm.enableService')"
         :disabled="submitting"
       />
@@ -91,17 +90,29 @@ const message = useMessage()
 
 const isEditMode = computed(() => Boolean(props.initialValue))
 
-const formState = reactive({
+// 表单状态初始化函数
+const initFormState = () => ({
   name: props.initialValue?.name || '',
   displayName: props.initialValue?.displayName || '',
   docUrl: props.initialValue?.docUrl || '',
   enabled: props.initialValue?.enabled ?? true,
 })
 
+const formState = reactive(initFormState())
+
 const mcpToml = ref<string>(props.initialValue?.tomlConfig || '')
 
 const submitting = ref(false)
 const formError = ref<string>()
+
+// 监听 initialValue 变化，重新初始化表单状态
+watch(() => props.initialValue, (newValue) => {
+  if (newValue) {
+    Object.assign(formState, initFormState())
+    // 同时更新 mcpToml
+    mcpToml.value = newValue.tomlConfig || ''
+  }
+}, { deep: true, immediate: false })
 
 const handleSubmit = async () => {
   formError.value = undefined

@@ -45,6 +45,13 @@ const jsonText = ref<string>(
   JSON.stringify(props.initialValue ?? {}, null, 2)
 )
 
+// 监听 initialValue 变化，更新表单内容
+watch(() => props.initialValue, (newValue) => {
+  if (newValue !== undefined) {
+    jsonText.value = JSON.stringify(newValue, null, 2)
+  }
+}, { deep: true, immediate: false })
+
 const handleCodeError = (err: string | null) => {
   codeError.value = err
 }
