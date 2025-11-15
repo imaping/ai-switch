@@ -69,10 +69,9 @@ const version = appConfig.version
       <n-notification-provider>
         <n-message-provider>
           <n-loading-bar-provider>
-            <n-layout style="min-height: 100vh; display: flex; flex-direction: column;">
+            <div class="min-h-screen flex flex-col">
               <n-layout-header
                 bordered
-                style="flex-shrink: 0;"
                 class="h-16 flex items-center px-6 bg-white shadow-sm"
               >
                 <div class="w-full max-w-7xl mx-auto flex items-center justify-between">
@@ -90,7 +89,7 @@ const version = appConfig.version
               </n-layout-header>
 
               <n-layout-content>
-                <main class="w-full max-w-7xl mx-auto px-6 py-8">
+                <main class="w-full max-w-7xl mx-auto px-6 pt-8 pb-0">
                   <NuxtLayout>
                     <NuxtPage />
                   </NuxtLayout>
@@ -99,7 +98,6 @@ const version = appConfig.version
 
               <n-layout-footer
                 bordered
-                style="flex-shrink: 0;"
                 class="bg-gray-50 border-t border-gray-200"
               >
                 <div class="w-full max-w-7xl mx-auto px-6 py-6">
@@ -129,7 +127,7 @@ const version = appConfig.version
                   </div>
                 </div>
               </n-layout-footer>
-            </n-layout>
+            </div>
             <NGlobalStyle />
           </n-loading-bar-provider>
         </n-message-provider>
