@@ -369,7 +369,6 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
             quaternary: true,
             circle: true,
             size: 'tiny',
-            type: 'info',
             loading: balanceAllLoading.value,
             disabled: balanceAllLoading.value,
             onClick: () => handleQueryAllBalances()
@@ -395,7 +394,6 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
             quaternary: true,
             circle: true,
             size: 'tiny',
-            type: 'info',
             loading: !!balanceRowLoading.value[env.id],
             disabled: !!balanceRowLoading.value[env.id] || balanceAllLoading.value,
             onClick: () => handleQueryBalance(env)
