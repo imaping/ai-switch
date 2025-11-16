@@ -23,7 +23,8 @@ ENV NITRO_PRESET=node-server
 RUN pnpm build
 
 # 只保留生产依赖，减小最终镜像体积
-RUN pnpm prune --prod
+# RUN pnpm prune --prod
+RUN pnpm build
 
 FROM node:20-alpine AS runner
 
