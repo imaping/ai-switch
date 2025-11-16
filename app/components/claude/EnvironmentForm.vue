@@ -271,6 +271,24 @@ watch([() => formState.requestUrl, () => formState.apiKey], ([url, key]) => {
   }
 })
 
+// 监听 codeConfigJson,更新 apiKey 和 requestUrl
+watch(codeConfigJson, (configJson) => {
+  try {
+    const config = JSON.parse(configJson || '{}')
+    if (config?.env) {
+        if (config.env.ANTHROPIC_BASE_URL && config.env.ANTHROPIC_BASE_URL !== formState.requestUrl) {
+          formState.requestUrl = config.env.ANTHROPIC_BASE_URL
+        }
+        if (config.env.ANTHROPIC_AUTH_TOKEN && config.env.ANTHROPIC_AUTH_TOKEN !== formState.apiKey) {
+          formState.apiKey = config.env.ANTHROPIC_AUTH_TOKEN
+        }
+      }
+  }
+  catch {
+    // 忽略 JSON 解析错误
+  }
+})
+
 // 通用配置合并/剔除工具
 const isPlainObject = (v: any) => v && typeof v === 'object' && !Array.isArray(v)
 const deepMergePreferSecond = (a: any, b: any): any => {
@@ -432,10 +450,3 @@ const openCommonConfig = () => {
   emit('open-general')
 }
 </script>
-const onBalanceExpandedChange = (names: string[] | string | null) => {
-  if (Array.isArray(names)) {
-    balanceExpanded.value = names.includes('balance')
-  } else {
-    balanceExpanded.value = names === 'balance'
-  }
-}

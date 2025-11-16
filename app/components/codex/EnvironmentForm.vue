@@ -414,6 +414,31 @@ watch(
   }
 )
 
+// 监听 configToml,更新 requestUrl
+watch(configToml, (toml) => {
+  try {
+    const parsed = (TOML.parse(toml || '') as any) || {}
+    const out = { ...parsed }
+    const providers = out.model_providers
+    let touched = false
+    if ('base_url' in out) {
+      formState.baseUrl = out.base_url
+      touched = true
+    }
+    if (isPlainObject(providers)) {
+      Object.entries(providers).forEach(([name, prov]) => {
+        if (isPlainObject(prov) && 'base_url' in (prov as any)) {
+          formState.baseUrl = (prov as any).base_url
+          touched = true
+        }
+      })
+    }
+  }
+  catch {
+    // 忽略 JSON 解析错误
+  }
+})
+
 // ========== 监听“写入通用配置”勾选与通用配置变化，实时合并/剔除 ==========
 watch(
   [() => formState.writeToCommon, () => codexStore.generalConfig?.payload],
