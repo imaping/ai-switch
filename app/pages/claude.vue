@@ -184,43 +184,6 @@
         </template>
       </NCard>
     </NModal>
-
-    <!-- 删除确认对话框 -->
-    <NModal v-model:show="confirmDialog.open">
-      <NCard
-        class="max-h-[85dvh] w-full overflow-y-auto sm:max-w-md"
-        :title="confirmDialog.mode === 'env' ? t('claude.deleteEnvironment') : t('claude.deleteMcp')"
-        closable
-        @close="closeConfirmDialog"
-      >
-        <p class="mb-6 text-gray-700 dark:text-gray-300">
-          {{ t('claude.deleteConfirmMessage', {
-            name: confirmDialog.mode === 'env'
-              ? confirmDialog.env?.title || t('claude.unnamedEnvironment')
-              : confirmDialog.mcp?.displayName || confirmDialog.mcp?.name
-          }) }}
-        </p>
-
-        <div class="flex justify-end gap-3">
-          <NButton
-            quaternary
-            size="small"
-            :disabled="confirmLoading"
-            @click="closeConfirmDialog"
-          >
-            {{ t('common.cancel') }}
-          </NButton>
-          <NButton
-            type="error"
-            size="small"
-            :loading="confirmLoading"
-            @click="handleConfirmDelete"
-          >
-            {{ t('claude.confirmDelete') }}
-          </NButton>
-        </div>
-      </NCard>
-    </NModal>
   </div>
 </template>
 
@@ -235,6 +198,7 @@ import {
   NSelect,
   NSwitch,
   NIcon,
+  NPopconfirm,
   useMessage,
   type DataTableColumns
 } from 'naive-ui'
@@ -437,16 +401,31 @@ const envColumns: DataTableColumns<ClaudeEnvironmentRecord> = [
           { default: () => t('claude.copy') }
         ),
         h(
-          NButton,
+          NPopconfirm,
           {
-            size: 'small',
-            quaternary: true,
-            focusable: false,
-            type: 'error',
+            positiveText: t('claude.confirmDelete'),
+            negativeText: t('common.cancel'),
             disabled: row.status === 'active',
-            onClick: () => handleDeleteEnv(row)
+            onPositiveClick: () => handleDeleteEnv(row)
           },
-          { default: () => t('common.delete') }
+          {
+            default: () =>
+              t('claude.deleteConfirmMessage', {
+                name: row.title || t('claude.unnamedEnvironment')
+              }),
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  size: 'small',
+                  quaternary: true,
+                  focusable: false,
+                  type: 'error',
+                  disabled: row.status === 'active'
+                },
+                { default: () => t('common.delete') }
+              )
+          }
         )
       ])
     }
@@ -516,16 +495,31 @@ const mcpColumns: DataTableColumns<ClaudeMcpRecord> = [
           { default: () => t('common.edit') }
         ),
         h(
-          NButton,
+          NPopconfirm,
           {
-            size: 'small',
-            quaternary: true,
-            focusable: false,
-            type: 'error',
+            positiveText: t('claude.confirmDelete'),
+            negativeText: t('common.cancel'),
             disabled: row.enabled,
-            onClick: () => handleDeleteMcp(row)
+            onPositiveClick: () => handleDeleteMcp(row)
           },
-          { default: () => t('common.delete') }
+          {
+            default: () =>
+              t('claude.deleteConfirmMessage', {
+                name: row.displayName || row.name
+              }),
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  size: 'small',
+                  quaternary: true,
+                  focusable: false,
+                  type: 'error',
+                  disabled: row.enabled
+                },
+                { default: () => t('common.delete') }
+              )
+          }
         )
       ])
     }
@@ -537,13 +531,38 @@ const editingEnv = ref<ClaudeEnvironmentRecord | undefined>()
 const envFormTreatAsNew = ref(false)
 const mcpModalOpen = ref(false)
 const editingMcp = ref<ClaudeMcpRecord | undefined>()
-const confirmDialog = ref<{
-  open: boolean
-  mode?: 'env' | 'mcp'
-  env?: ClaudeEnvironmentRecord
-  mcp?: ClaudeMcpRecord
-}>({ open: false })
-const confirmLoading = ref(false)
+
+// 删除操作
+const handleDeleteEnv = async (record: ClaudeEnvironmentRecord) => {
+  try {
+    await deleteEnvironment(record.id)
+    message.success(
+      t('claude.environmentDeleted', { name: record.title || '' })
+    )
+  }
+  catch (error: any) {
+    message.error(error?.message || t('claude.deleteError'))
+  }
+}
+
+const handleDeleteMcp = async (record: ClaudeMcpRecord) => {
+  if (record.enabled) {
+    message.error(t('claude.disableMcpFirst'))
+    return
+  }
+
+  try {
+    await deleteMcpServer(record.id)
+    message.success(
+      t('claude.mcpDeleted', {
+        name: record.displayName || record.name
+      })
+    )
+  }
+  catch (error: any) {
+    message.error(error?.message || t('claude.deleteError'))
+  }
+}
 
 // 生命周期
 onMounted(async () => {
@@ -610,64 +629,6 @@ const openMcpModal = (record?: ClaudeMcpRecord) => {
 const closeMcpModal = () => {
   mcpModalOpen.value = false
   editingMcp.value = undefined
-}
-
-const handleDeleteEnv = (record: ClaudeEnvironmentRecord) => {
-  confirmDialog.value = {
-    open: true,
-    mode: 'env',
-    env: record,
-  }
-}
-
-const handleDeleteMcp = (record: ClaudeMcpRecord) => {
-  if (record.enabled) {
-    message.error(t('claude.disableMcpFirst'))
-    return
-  }
-  confirmDialog.value = {
-    open: true,
-    mode: 'mcp',
-    mcp: record,
-  }
-}
-
-const closeConfirmDialog = () => {
-  if (confirmLoading.value)
-    return
-  confirmDialog.value = { open: false }
-}
-
-const handleConfirmDelete = async () => {
-  if (!confirmDialog.value.mode)
-    return
-
-  try {
-    confirmLoading.value = true
-
-    if (confirmDialog.value.mode === 'env' && confirmDialog.value.env) {
-      await deleteEnvironment(confirmDialog.value.env.id)
-      message.success(
-        t('claude.environmentDeleted', { name: confirmDialog.value.env.title || '' })
-      )
-    }
-    else if (confirmDialog.value.mode === 'mcp' && confirmDialog.value.mcp) {
-      await deleteMcpServer(confirmDialog.value.mcp.id)
-      message.success(
-        t('claude.mcpDeleted', {
-          name: confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name
-        })
-      )
-    }
-
-    confirmDialog.value = { open: false }
-  }
-  catch (error: any) {
-    message.error(error?.message || t('claude.deleteError'))
-  }
-  finally {
-    confirmLoading.value = false
-  }
 }
 
 // 方法

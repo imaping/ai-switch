@@ -72,41 +72,6 @@
         </template>
       </NCard>
     </NModal>
-
-    <!-- 删除确认对话框 -->
-    <NModal v-model:show="confirmDialog.open">
-      <NCard
-        class="max-h-[85dvh] w-full overflow-y-auto sm:max-w-md"
-        :title="t('remote.deleteHost')"
-        closable
-        @close="closeConfirmDialog"
-      >
-        <p class="mb-6 text-gray-700 dark:text-gray-300">
-          {{ t('remote.deleteConfirmMessage', {
-            name: confirmDialog.host?.title || t('remote.unnamedHost')
-          }) }}
-        </p>
-
-        <div class="flex justify-end gap-3">
-          <NButton
-            quaternary
-            size="small"
-            :disabled="confirmLoading"
-            @click="closeConfirmDialog"
-          >
-            {{ t('common.cancel') }}
-          </NButton>
-          <NButton
-            type="error"
-            size="small"
-            :loading="confirmLoading"
-            @click="handleConfirmDelete"
-          >
-            {{ t('remote.confirmDelete') }}
-          </NButton>
-        </div>
-      </NCard>
-    </NModal>
   </div>
 </template>
 
@@ -119,6 +84,7 @@ import {
   NModal,
   NTag,
   NIcon,
+  NPopconfirm,
   useMessage,
   type DataTableColumns
 } from 'naive-ui'
@@ -255,16 +221,31 @@ const hostColumns: DataTableColumns<RemoteEnvironmentRecord> = [
           { default: () => t('common.edit') }
         ),
         h(
-          NButton,
+          NPopconfirm,
           {
-            size: 'small',
-            quaternary: true,
-            focusable: false,
-            type: 'error',
+            positiveText: t('remote.confirmDelete'),
+            negativeText: t('common.cancel'),
             disabled: testingConnections.value[row.id],
-            onClick: () => handleDeleteHost(row)
+            onPositiveClick: () => handleDeleteHost(row)
           },
-          { default: () => t('common.delete') }
+          {
+            default: () =>
+              t('remote.deleteConfirmMessage', {
+                name: row.title || t('remote.unnamedHost')
+              }),
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  size: 'small',
+                  quaternary: true,
+                  focusable: false,
+                  type: 'error',
+                  disabled: testingConnections.value[row.id]
+                },
+                { default: () => t('common.delete') }
+              )
+          }
         )
       ])
     }
@@ -275,11 +256,6 @@ const testingConnections = ref<Record<string, boolean>>({})
 const hostModalOpen = ref(false)
 const hostFormRef = ref<any>()
 const editingHost = ref<RemoteEnvironmentRecord | undefined>()
-const confirmDialog = ref<{
-  open: boolean
-  host?: RemoteEnvironmentRecord
-}>({ open: false })
-const confirmLoading = ref(false)
 
 // 生命周期
 onMounted(async () => {
@@ -303,36 +279,15 @@ const closeHostModal = () => {
   editingHost.value = undefined
 }
 
-const handleDeleteHost = (record: RemoteEnvironmentRecord) => {
-  confirmDialog.value = {
-    open: true,
-    host: record,
-  }
-}
-
-const closeConfirmDialog = () => {
-  if (confirmLoading.value)
-    return
-  confirmDialog.value = { open: false }
-}
-
-const handleConfirmDelete = async () => {
-  if (!confirmDialog.value.host)
-    return
-
+const handleDeleteHost = async (record: RemoteEnvironmentRecord) => {
   try {
-    confirmLoading.value = true
-    await deleteEnvironment(confirmDialog.value.host.id)
+    await deleteEnvironment(record.id)
     message.success(
-      t('remote.hostDeleted', { name: confirmDialog.value.host.title || '' })
+      t('remote.hostDeleted', { name: record.title || '' })
     )
-    confirmDialog.value = { open: false }
   }
   catch (error: any) {
     message.error(error?.message || t('remote.deleteError'))
-  }
-  finally {
-    confirmLoading.value = false
   }
 }
 

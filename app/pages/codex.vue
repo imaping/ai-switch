@@ -183,43 +183,6 @@
         </template>
       </NCard>
     </NModal>
-
-    <!-- 删除确认对话框 -->
-    <NModal v-model:show="confirmDialog.open">
-      <NCard
-        class="max-h-[85dvh] w-full overflow-y-auto sm:max-w-md"
-        :title="confirmDialog.mode === 'env' ? t('codex.deleteEnvironment') : t('codex.deleteMcp')"
-        closable
-        @close="closeConfirmDialog"
-      >
-        <p class="mb-6 text-gray-700 dark:text-gray-300">
-          {{ t('codex.deleteConfirmMessage', {
-            name: confirmDialog.mode === 'env'
-              ? confirmDialog.env?.title || t('codex.unnamedEnvironment')
-              : confirmDialog.mcp?.displayName || confirmDialog.mcp?.name
-          }) }}
-        </p>
-
-        <div class="flex justify-end gap-3">
-          <NButton
-            quaternary
-            size="small"
-            :disabled="confirmLoading"
-            @click="closeConfirmDialog"
-          >
-            {{ t('common.cancel') }}
-          </NButton>
-          <NButton
-            type="error"
-            size="small"
-            :loading="confirmLoading"
-            @click="handleConfirmDelete"
-          >
-            {{ t('codex.confirmDelete') }}
-          </NButton>
-        </div>
-      </NCard>
-    </NModal>
   </div>
 </template>
 
@@ -234,6 +197,7 @@ import {
   NSelect,
   NSwitch,
   NIcon,
+  NPopconfirm,
   useMessage,
   type DataTableColumns
 } from 'naive-ui'
@@ -457,16 +421,31 @@ const envColumns: DataTableColumns<CodexEnvironmentRecord> = [
           { default: () => t('codex.copy') }
         ),
         h(
-          NButton,
+          NPopconfirm,
           {
-            size: 'small',
-            quaternary: true,
-            focusable: false,
-            type: 'error',
+            positiveText: t('codex.confirmDelete'),
+            negativeText: t('common.cancel'),
             disabled: row.status === 'active',
-            onClick: () => handleDeleteEnv(row)
+            onPositiveClick: () => handleDeleteEnv(row)
           },
-          { default: () => t('common.delete') }
+          {
+            default: () =>
+              t('codex.deleteConfirmMessage', {
+                name: row.title || t('codex.unnamedEnvironment')
+              }),
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  size: 'small',
+                  quaternary: true,
+                  focusable: false,
+                  type: 'error',
+                  disabled: row.status === 'active'
+                },
+                { default: () => t('common.delete') }
+              )
+          }
         )
       ])
     }
@@ -536,16 +515,31 @@ const mcpColumns: DataTableColumns<CodexMcpRecord> = [
           { default: () => t('common.edit') }
         ),
         h(
-          NButton,
+          NPopconfirm,
           {
-            size: 'small',
-            quaternary: true,
-            focusable: false,
-            type: 'error',
+            positiveText: t('codex.confirmDelete'),
+            negativeText: t('common.cancel'),
             disabled: row.enabled,
-            onClick: () => handleDeleteMcp(row)
+            onPositiveClick: () => handleDeleteMcp(row)
           },
-          { default: () => t('common.delete') }
+          {
+            default: () =>
+              t('codex.deleteConfirmMessage', {
+                name: row.displayName || row.name
+              }),
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  size: 'small',
+                  quaternary: true,
+                  focusable: false,
+                  type: 'error',
+                  disabled: row.enabled
+                },
+                { default: () => t('common.delete') }
+              )
+          }
         )
       ])
     }
@@ -632,14 +626,37 @@ const handleAfterEnvSaved = async (record: CodexEnvironmentRecord) => {
   }
 }
 
-// 删除确认对话框
-const confirmDialog = ref<{
-  open: boolean
-  mode?: 'env' | 'mcp'
-  env?: CodexEnvironmentRecord
-  mcp?: CodexMcpRecord
-}>({ open: false })
-const confirmLoading = ref(false)
+// 删除操作
+const handleDeleteEnv = async (record: CodexEnvironmentRecord) => {
+  try {
+    await deleteEnvironment(record.id)
+    message.success(
+      t('codex.environmentDeleted', { name: record.title || '' })
+    )
+  }
+  catch (error: any) {
+    message.error(error?.message || t('codex.deleteError'))
+  }
+}
+
+const handleDeleteMcp = async (record: CodexMcpRecord) => {
+  if (record.enabled) {
+    message.error(t('codex.disableMcpFirst'))
+    return
+  }
+
+  try {
+    await codexStore.deleteMcpServer(record.id)
+    message.success(
+      t('codex.mcpDeleted', {
+        name: record.displayName || record.name
+      })
+    )
+  }
+  catch (error: any) {
+    message.error(error?.message || t('codex.deleteError'))
+  }
+}
 
 // 通用配置管理
 const generalModalOpen = ref(false)
@@ -680,63 +697,5 @@ const closeEnvModal = () => {
   envModalOpen.value = false
   editingEnv.value = undefined
   envFormTreatAsNew.value = false
-}
-
-const handleDeleteEnv = (record: CodexEnvironmentRecord) => {
-  confirmDialog.value = {
-    open: true,
-    mode: 'env',
-    env: record,
-  }
-}
-
-const handleDeleteMcp = (record: CodexMcpRecord) => {
-  if (record.enabled) {
-    message.error(t('codex.disableMcpFirst'))
-    return
-  }
-  confirmDialog.value = {
-    open: true,
-    mode: 'mcp',
-    mcp: record,
-  }
-}
-
-const closeConfirmDialog = () => {
-  if (confirmLoading.value)
-    return
-  confirmDialog.value = { open: false }
-}
-
-const handleConfirmDelete = async () => {
-  if (!confirmDialog.value.mode)
-    return
-
-  try {
-    confirmLoading.value = true
-
-    if (confirmDialog.value.mode === 'env' && confirmDialog.value.env) {
-      await deleteEnvironment(confirmDialog.value.env.id)
-      message.success(
-        t('codex.environmentDeleted', { name: confirmDialog.value.env.title || '' })
-      )
-    }
-    else if (confirmDialog.value.mode === 'mcp' && confirmDialog.value.mcp) {
-      await codexStore.deleteMcpServer(confirmDialog.value.mcp.id)
-      message.success(
-        t('codex.mcpDeleted', {
-          name: confirmDialog.value.mcp.displayName || confirmDialog.value.mcp.name
-        })
-      )
-    }
-
-    confirmDialog.value = { open: false }
-  }
-  catch (error: any) {
-    message.error(error?.message || t('codex.deleteError'))
-  }
-  finally {
-    confirmLoading.value = false
-  }
 }
 </script>
