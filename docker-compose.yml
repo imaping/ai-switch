@@ -1,0 +1,13 @@
+services:
+  ai-swich:
+    image: ithinkings/ai-swich:latest
+    container_name: ai-swich
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NITRO_HOST=0.0.0.0
+      - NITRO_PORT=3000
+      - PORT=3000
+
