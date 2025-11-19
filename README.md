@@ -40,6 +40,7 @@
 |------|------------|---------|
 | **Claude Code** | `~/.claude/` | ✅ 环境管理、MCP 配置、余额查询 |
 | **Codex** | `~/.codex/` | ✅ 环境管理、MCP 配置、余额查询 |
+| **Gemini** | `~/.gemini/` | ✅ 环境管理、MCP 配置、余额查询 |
 
 ## 🚀 快速开始
 
@@ -114,6 +115,10 @@ ai-switch-nust/
 │   │   │   ├── EnvironmentForm.vue      # 环境配置表单
 │   │   │   └── McpForm.vue              # MCP 服务表单
 │   │   ├── codex/               # Codex 环境相关组件
+│   │   │   ├── GeneralConfigForm.vue
+│   │   │   ├── EnvironmentForm.vue
+│   │   │   └── McpForm.vue
+│   │   ├── gemini/              # Gemini 环境相关组件
 │   │   │   ├── GeneralConfigForm.vue
 │   │   │   ├── EnvironmentForm.vue
 │   │   │   └── McpForm.vue

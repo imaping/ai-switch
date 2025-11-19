@@ -35,7 +35,7 @@ const items = computed<MenuOption[]>(() => [
         { default: () => t('nav.claude') }
       ),
     key: 'claude'
-  },{
+  }, {
     label: () =>
       h(
         NuxtLink,
@@ -45,7 +45,17 @@ const items = computed<MenuOption[]>(() => [
         { default: () => t('nav.codex') }
       ),
     key: 'codex'
-  },{
+  }, {
+    label: () =>
+      h(
+        NuxtLink,
+        {
+          to: '/gemini'
+        },
+        { default: () => t('nav.gemini') }
+      ),
+    key: 'gemini'
+  }, {
     label: () =>
       h(
         NuxtLink,

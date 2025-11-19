@@ -27,6 +27,15 @@ const quickLinks = computed(() => [
     hoverColor: 'hover:border-purple-300',
   },
   {
+    label: t('home.manageGemini'),
+    description: t('home.manageGeminiDesc'),
+    to: '/gemini',
+    icon: '✨',
+    bgColor: 'bg-cyan-50',
+    iconColor: 'text-cyan-600',
+    hoverColor: 'hover:border-cyan-300',
+  },
+  {
     label: t('home.manageRemote'),
     description: t('home.manageRemoteDesc'),
     to: '/remote',

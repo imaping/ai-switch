@@ -73,6 +73,13 @@ export const codexServiceLogger = logger.child({
 })
 
 /**
+ * 创建 Gemini 服务日志记录器
+ */
+export const geminiServiceLogger = logger.child({
+  module: 'gemini-service',
+})
+
+/**
  * 创建 API 错误日志记录器
  */
 export const apiErrorLogger = logger.child({

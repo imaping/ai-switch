@@ -3,20 +3,20 @@
     <!-- 基本信息 -->
     <div class="space-y-4">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <NFormItem :label="t('claude.form.titleLabel')" path="title" :required="true">
+        <NFormItem :label="t('gemini.form.titleLabel')" path="title" :required="true">
           <NInput
             v-model:value="formState.title"
-            :placeholder="t('claude.form.titlePlaceholder')"
+            :placeholder="t('gemini.form.titlePlaceholder')"
             :disabled="submitting"
             size="large"
             class="w-full"
           />
         </NFormItem>
 
-        <NFormItem :label="t('claude.form.homepageLabel')" path="homepage">
+        <NFormItem :label="t('gemini.form.homepageLabel')" path="homepage">
           <NInput
             v-model:value="formState.homepage"
-            :placeholder="t('claude.form.homepagePlaceholder')"
+            :placeholder="t('gemini.form.homepagePlaceholder')"
             :disabled="submitting"
             size="large"
             class="w-full"
@@ -24,10 +24,10 @@
         </NFormItem>
       </div>
 
-      <NFormItem :label="t('claude.form.descriptionLabel')" path="description">
+      <NFormItem :label="t('gemini.form.descriptionLabel')" path="description">
         <NInput
           v-model:value="formState.description"
-          :placeholder="t('claude.form.descriptionPlaceholder')"
+          :placeholder="t('gemini.form.descriptionPlaceholder')"
           type="textarea"
           :rows="4"
           :disabled="submitting"
@@ -36,62 +36,67 @@
       </NFormItem>
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <NFormItem :label="t('claude.form.requestUrlLabel')" path="requestUrl" :required="true">
+        <NFormItem :label="t('gemini.form.baseUrlLabel')" path="baseUrl" :required="true">
           <NInput
-            v-model:value="formState.requestUrl"
-            :placeholder="t('claude.form.requestUrlPlaceholder')"
+            v-model:value="formState.baseUrl"
+            :placeholder="t('gemini.form.baseUrlPlaceholder')"
             :disabled="submitting"
             size="large"
             class="w-full"
           />
         </NFormItem>
 
-        <NFormItem :label="t('claude.form.apiKeyLabel')" path="apiKey" :required="true">
+        <NFormItem :label="t('gemini.form.apiKeyLabel')" path="apiKey" :required="true">
           <NInput
             v-model:value="formState.apiKey"
             type="password"
             show-password-on="click"
-            :placeholder="t('claude.form.apiKeyPlaceholder')"
+            :placeholder="t('gemini.form.apiKeyPlaceholder')"
             :disabled="submitting"
             size="large"
             class="w-full"
           />
         </NFormItem>
+
       </div>
     </div>
 
-    <!-- Claude Code 配置 -->
+    <!-- 结果 .env （合成结果展示） -->
     <div class="space-y-3">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold">{{ t('claude.form.codeConfigTitle') }}</h3>
+        <h3 class="text-lg font-semibold">
+          {{ t('gemini.form.envPreviewTitle') }}
+        </h3>
         <div class="flex items-center gap-3">
-          <NCheckbox
-            v-model:checked="formState.writeToCommon"
-            :label="t('claude.form.writeToCommon')"
-            :disabled="submitting"
-          />
-          <NButton quaternary type="primary" @click="openCommonConfig">
-            {{ t('claude.generalConfigManagement') }}
+          <NCheckbox v-model:checked="formState.writeToCommon">
+            {{ t('gemini.form.writeToCommon') }}
+          </NCheckbox>
+          <NButton quaternary type="primary" @click="openGeneralConfig">
+            {{ t('gemini.generalConfigManagement') }}
           </NButton>
         </div>
       </div>
 
       <SharedCodeEditor
-        v-model="codeConfigJson"
-        language="json"
-        height="250px"
-        @error="handleCodeError"
+        v-model="codeConfig"
+        language="text"
+        height="220px"
+        :validate="false"
       />
     </div>
 
     <!-- 余额查询配置(可选) -->
-    <NCollapse class="w-full flex flex-col gap-2" :default-expanded-names="balanceExpanded ? ['balance'] : []">
-      <NCollapseItem :title="t('claude.form.balanceConfigTitle')" name="balance">
+    <NCollapse
+      class="flex w-full flex-col gap-2"
+      :default-expanded-names="balanceExpanded ? ['balance'] : []"
+      @update:expanded-names="onBalanceExpandedChange"
+    >
+      <NCollapseItem :title="t('gemini.form.balanceConfigTitle')" name="balance">
         <div class="space-y-4 p-4">
-          <NFormItem :label="t('claude.form.balanceUrlLabel')" path="balanceUrl">
+          <NFormItem :label="t('gemini.form.balanceUrlLabel')" path="balanceUrl">
             <NInput
               v-model:value="formState.balanceUrl"
-              :placeholder="t('claude.form.balanceUrlPlaceholder')"
+              :placeholder="t('gemini.form.balanceUrlPlaceholder')"
               :disabled="submitting"
               size="large"
               class="w-full"
@@ -99,23 +104,23 @@
           </NFormItem>
 
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <NFormItem :label="t('claude.form.httpMethodLabel')" path="balanceMethod">
+            <NFormItem :label="t('gemini.form.httpMethodLabel')" path="balanceMethod">
               <NSelect
                 v-model:value="formState.balanceMethod"
                 :options="[
                   { label: 'GET', value: 'GET' },
-                  { label: 'POST', value: 'POST' },
+                  { label: 'POST', value: 'POST' }
                 ]"
-                :placeholder="t('claude.form.httpMethodPlaceholder')"
+                :placeholder="t('gemini.form.httpMethodPlaceholder')"
                 :disabled="submitting"
                 class="w-full"
               />
             </NFormItem>
 
-            <NFormItem :label="t('claude.form.jsonPathLabel')" path="balanceJsonPath">
+            <NFormItem :label="t('gemini.form.jsonPathLabel')" path="balanceJsonPath">
               <NInput
                 v-model:value="formState.balanceJsonPath"
-                :placeholder="t('claude.form.jsonPathPlaceholder')"
+                :placeholder="t('gemini.form.jsonPathPlaceholder')"
                 :disabled="submitting"
                 size="large"
                 class="w-full"
@@ -123,18 +128,18 @@
             </NFormItem>
           </div>
 
-          <NFormItem :label="t('claude.form.headersLabel')" path="balanceHeaders">
+          <NFormItem :label="t('gemini.form.headersLabel')" path="balanceHeaders">
             <NInput
               v-model:value="formState.balanceHeaders"
               type="textarea"
               class="w-full"
               :rows="4"
-              :placeholder="t('claude.form.headersPlaceholder')"
+              :placeholder="t('gemini.form.headersPlaceholder')"
               :disabled="submitting"
             />
           </NFormItem>
 
-          <NFormItem :label="t('claude.form.bodyLabel')" path="balanceBody">
+          <NFormItem :label="t('gemini.form.bodyLabel')" path="balanceBody">
             <NInput
               v-model:value="formState.balanceBody"
               type="textarea"
@@ -143,10 +148,10 @@
             />
           </NFormItem>
 
-          <NFormItem :label="t('claude.form.formulaLabel')" path="balanceFormula">
+          <NFormItem :label="t('gemini.form.formulaLabel')" path="balanceFormula">
             <NInput
               v-model:value="formState.balanceFormula"
-              :placeholder="t('claude.form.formulaPlaceholder')"
+              :placeholder="t('gemini.form.formulaPlaceholder')"
               :disabled="submitting"
               size="large"
               class="w-full"
@@ -158,14 +163,12 @@
 
     <!-- 错误提示 -->
     <NAlert
-      v-if="formError || codeError"
+      v-if="formError"
       type="error"
       :show-icon="true"
     >
-      {{ formError || codeError }}
+      {{ formError }}
     </NAlert>
-
-    <!-- 操作按钮已移至父级弹窗 footer -->
   </NForm>
 </template>
 
@@ -180,15 +183,15 @@ import {
   NFormItem,
   NInput,
   NSelect,
-  useMessage
+  useMessage,
 } from 'naive-ui'
-
-import type { ClaudeEnvironmentRecord } from '#shared/types/claude'
+import * as dotenv from 'dotenv' 
+import type { GeminiEnvironmentRecord } from '#shared/types/gemini'
 
 const { t } = useI18n()
 
 interface Props {
-  initialValue?: ClaudeEnvironmentRecord
+  initialValue?: GeminiEnvironmentRecord
   treatAsNew?: boolean
 }
 
@@ -196,23 +199,25 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
   'open-general': []
-  saved: [record: ClaudeEnvironmentRecord]
+  saved: [record: GeminiEnvironmentRecord]
 }>()
 
-import { useClaudeStore } from '~/stores/claude'
-const claudeStore = useClaudeStore()
-const { createEnvironment, updateEnvironment } = claudeStore
+import { useGeminiStore } from '~/stores/gemini'
+const geminiStore = useGeminiStore()
+const { createEnvironment, updateEnvironment } = geminiStore
 const message = useMessage()
 
-const isEditMode = computed(() => Boolean(props.initialValue && !props.treatAsNew))
+const isEditMode = computed(
+  () => Boolean(props.initialValue && !props.treatAsNew),
+)
 
 // 表单状态初始化函数
 const initFormState = () => ({
   title: props.initialValue?.title || '',
   homepage: props.initialValue?.homepage || '',
   description: props.initialValue?.description || '',
-  requestUrl: props.initialValue?.requestUrl || props.initialValue?.codeConfig?.env?.ANTHROPIC_BASE_URL || '',
-  apiKey: props.initialValue?.apiKey || props.initialValue?.codeConfig?.env?.ANTHROPIC_AUTH_TOKEN || '',
+  baseUrl: props.initialValue?.baseUrl || '',
+  apiKey: props.initialValue?.apiKey || '',
   writeToCommon: props.initialValue?.writeToCommon || false,
   balanceUrl: props.initialValue?.balanceUrl || '',
   balanceMethod: props.initialValue?.balanceRequest?.method || 'GET',
@@ -224,73 +229,64 @@ const initFormState = () => ({
   balanceFormula: props.initialValue?.balanceFormula || '',
 })
 
-// 表单状态
 const formState = reactive(initFormState())
 
-// Code 配置
-const defaultCodeConfig = {
-  env: {
-    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1,
-    ANTHROPIC_BASE_URL: '',
-    ANTHROPIC_AUTH_TOKEN: '',
-  },
-}
+const defaultCodeConfig = `GOOGLE_GEMINI_BASE_URL=
+GEMINI_API_KEY=`
 
-const codeConfigJson = ref(
-  JSON.stringify(props.initialValue?.codeConfig || defaultCodeConfig, null, 2)
+const codeConfig = ref(
+  props.initialValue?.envContent || defaultCodeConfig
 )
 
 const submitting = ref(false)
 const formError = ref<string>()
-const codeError = ref<string | null>(null)
 const balanceExpanded = ref(false)
 
 // 监听 initialValue 变化，重新初始化表单状态
-watch(() => props.initialValue, (newValue) => {
-  if (newValue) {
-    Object.assign(formState, initFormState())
-    // 同时更新 codeConfigJson
-    codeConfigJson.value = JSON.stringify(
-      newValue.codeConfig || defaultCodeConfig,
-      null,
-      2
-    )
-  }
-}, { deep: true, immediate: false })
+watch(
+  () => props.initialValue,
+  (newValue) => {
+    if (newValue) {
+      Object.assign(formState, initFormState())
+    }
+  },
+  { deep: true, immediate: false },
+)
 
-// 监听 requestUrl 和 apiKey 变化,更新 JSON
-watch([() => formState.requestUrl, () => formState.apiKey], ([url, key]) => {
-  try {
-    const config = JSON.parse(codeConfigJson.value)
-    config.env = config.env || {}
-    config.env.ANTHROPIC_BASE_URL = url
-    config.env.ANTHROPIC_AUTH_TOKEN = key
-    codeConfigJson.value = JSON.stringify(config, null, 2)
-  }
-  catch {
-    // 忽略 JSON 解析错误
-  }
-})
+// 构造本环境核心变量 .env 片段
+const buildCoreEnv = (baseUrl: string, apiKey: string, model: string) => {
+  const lines: string[] = []
+  if (baseUrl) lines.push(`GOOGLE_GEMINI_BASE_URL=${baseUrl}`)
+  if (apiKey) lines.push(`GEMINI_API_KEY=${apiKey}`)
+  if (model) lines.push(`GEMINI_MODEL=${model}`)
+  return lines.join('\n')
+}
 
-// 监听 codeConfigJson,更新 apiKey 和 requestUrl
-watch(codeConfigJson, (configJson) => {
-  try {
-    const config = JSON.parse(configJson || '{}')
-    if (config?.env) {
-        if (config.env.ANTHROPIC_BASE_URL && config.env.ANTHROPIC_BASE_URL !== formState.requestUrl) {
-          formState.requestUrl = config.env.ANTHROPIC_BASE_URL
-        }
-        if (config.env.ANTHROPIC_AUTH_TOKEN && config.env.ANTHROPIC_AUTH_TOKEN !== formState.apiKey) {
-          formState.apiKey = config.env.ANTHROPIC_AUTH_TOKEN
-        }
+// 勾选/取消写入通用配置时，实时更新  编辑框展示的结果（通用优先级最低，仅填充缺失键）
+watch(
+  [() => formState.writeToCommon, () => geminiStore.generalConfig?.payload],
+  () => {
+    try {
+      const current = dotenv.parse(codeConfig.value)
+      const common: any = dotenv.parse(geminiStore.generalConfig?.payload)
+      let next = current
+      if (formState.writeToCommon) {
+        next = deepMergePreferSecond(common, current)
+      } else if (common && Object.keys(common).length) {
+        const pruned = deepPruneEqual(current, common)
+        next = pruned === undefined ? {} : pruned
       }
+      next = next || {}
+      next.GOOGLE_GEMINI_BASE_URL = formState.baseUrl
+      next.GEMINI_API_KEY = formState.apiKey
+      codeConfig.value = objectToEnvString(next)
+    }
+    catch {
+      // 忽略 解析错误
+    }
   }
-  catch {
-    // 忽略 JSON 解析错误
-  }
-})
+)
 
-// 通用配置合并/剔除工具
 const isPlainObject = (v: any) => v && typeof v === 'object' && !Array.isArray(v)
 const deepMergePreferSecond = (a: any, b: any): any => {
   if (Array.isArray(a) && Array.isArray(b)) return b
@@ -326,71 +322,86 @@ const deepPruneEqual = (obj: any, tmpl: any): any => {
   return obj === tmpl ? undefined : obj
 }
 
-// 勾选/取消写入通用配置时，实时更新 JSON 编辑框展示的结果（通用优先级最低，仅填充缺失键）
-watch(
-  [() => formState.writeToCommon, () => claudeStore.generalConfig?.payload],
-  () => {
-    try {
-      const current = JSON.parse(codeConfigJson.value)
-      const common: any = claudeStore.generalConfig?.payload || {}
-      let next = current
-      if (formState.writeToCommon) {
-        next = deepMergePreferSecond(common, current)
-      } else if (common && Object.keys(common).length) {
-        const pruned = deepPruneEqual(current, common)
-        next = pruned === undefined ? {} : pruned
-      }
-      next.env = next.env || {}
-      next.env.ANTHROPIC_BASE_URL = formState.requestUrl
-      next.env.ANTHROPIC_AUTH_TOKEN = formState.apiKey
-      codeConfigJson.value = JSON.stringify(next, null, 2)
-    }
-    catch {
-      // 忽略 JSON 解析错误
-    }
+
+// 监听 baseUrl 和 apiKey 变化,更新 JSON
+watch([() => formState.baseUrl, () => formState.apiKey], ([url, key]) => {
+  try {
+    const config = dotenv.parse(codeConfig.value)
+    config.GOOGLE_GEMINI_BASE_URL = url
+    config.GEMINI_API_KEY = key
+    codeConfig.value = objectToEnvString(config)
   }
+  catch {
+    // 忽略 解析错误
+  }
+})
+
+const objectToEnvString = (obj:Object):string=> {
+   return Object.entries(obj)
+    .map(([key, value]) => {
+      return `${key}=${value}`;
+    })
+    .join('\n');
+}
+
+// 预览内容变更时，反向更新 baseUrl / apiKey（从预览 -> 字段）
+watch(
+  codeConfig,
+  (val) => {
+    const env = dotenv.parse(val || '')
+    const nextBase = env.GOOGLE_GEMINI_BASE_URL || ''
+    const nextKey = env.GEMINI_API_KEY || ''
+    if (nextBase !== formState.baseUrl) formState.baseUrl = nextBase
+    if (nextKey !== formState.apiKey) formState.apiKey = nextKey
+  },
 )
 
-const handleCodeError = (error: string | null) => {
-  codeError.value = error
+const onBalanceExpandedChange = (names: string[] | string | null) => {
+  if (Array.isArray(names)) {
+    balanceExpanded.value = names.includes('balance')
+  } else {
+    balanceExpanded.value = names === 'balance'
+  }
 }
 
 const handleSubmit = async () => {
   formError.value = undefined
 
-  if (codeError.value) {
-    formError.value = t('claude.form.fixJsonError')
+  if (!formState.title.trim()) {
+    formError.value = t('gemini.form.titleRequired')
+    return
+  }
+  if (!formState.baseUrl.trim()) {
+    formError.value = t('gemini.form.baseUrlRequired')
+    return
+  }
+  if (!formState.apiKey.trim()) {
+    formError.value = t('gemini.form.apiKeyRequired')
     return
   }
 
   try {
     submitting.value = true
 
-    // 解析 code config
-    let codeConfig: any = JSON.parse(codeConfigJson.value)
-
-    // 解析 balance headers
-    let balanceHeaders: Record<string, string> | undefined
-    if (formState.balanceHeaders.trim()) {
-      try {
-        balanceHeaders = JSON.parse(formState.balanceHeaders)
-      }
-      catch {
-        throw new Error(t('claude.form.balanceHeadersError'))
-      }
-    }
-
     const payload: any = {
       title: formState.title,
       homepage: formState.homepage || undefined,
       description: formState.description || undefined,
-      requestUrl: formState.requestUrl,
+      baseUrl: formState.baseUrl,
       apiKey: formState.apiKey,
       writeToCommon: formState.writeToCommon,
-      codeConfig,
     }
-    // 余额查询配置（与后端/类型对齐为扁平字段）
+
     if (formState.balanceUrl?.trim()) {
+      let balanceHeaders: Record<string, string> | undefined
+      if (formState.balanceHeaders.trim()) {
+        try {
+          balanceHeaders = JSON.parse(formState.balanceHeaders)
+        } catch {
+          throw new Error(t('gemini.form.balanceHeadersError'))
+        }
+      }
+
       payload.balanceUrl = formState.balanceUrl
       payload.balanceRequest = {
         method: formState.balanceMethod || undefined,
@@ -400,54 +411,46 @@ const handleSubmit = async () => {
       payload.balanceJsonPath = formState.balanceJsonPath || undefined
       payload.balanceFormula = formState.balanceFormula || undefined
     } else {
-      // 若未填写 URL，则视为清除余额配置
       payload.balanceUrl = undefined
       payload.balanceRequest = undefined
       payload.balanceJsonPath = undefined
       payload.balanceFormula = undefined
     }
 
-    let savedRecord: ClaudeEnvironmentRecord
+    let savedRecord: GeminiEnvironmentRecord
     if (isEditMode.value) {
       savedRecord = await updateEnvironment(props.initialValue!.id, payload)
       message.success(
-        t('claude.form.environmentUpdated', { name: formState.title })
+        t('gemini.form.environmentUpdated', { name: formState.title }),
       )
-    }
-    else {
+    } else {
       savedRecord = await createEnvironment(payload)
       message.success(
-        t('claude.form.environmentCreated', { name: formState.title })
+        t('gemini.form.environmentCreated', { name: formState.title }),
       )
     }
 
     emit('saved', savedRecord)
     emit('close')
-  }
-  catch (error: any) {
-    formError.value = error.message || t('claude.form.operationFailed')
-  }
-  finally {
+  } catch (error: any) {
+    formError.value = error.message || t('gemini.form.operationFailed')
+  } finally {
     submitting.value = false
   }
 }
 
-// 暴露给父组件用于页脚按钮控制
 defineExpose({
-  submit: () => {
-    return handleSubmit()
-  },
+  submit: () => handleSubmit(),
   submitting,
-  codeError,
   isEditMode,
-  // 兼容父组件以函数方式读取状态
   isSubmitting: () => submitting.value,
-  hasCodeError: () => Boolean(codeError.value),
+  hasCodeError: () => false,
   isEdit: () => isEditMode.value,
 })
 
-// 打开通用配置对话框：让父组件控制弹窗开启
-const openCommonConfig = () => {
+const openGeneralConfig = () => {
   emit('open-general')
 }
+
+
 </script>

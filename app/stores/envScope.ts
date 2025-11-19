@@ -31,9 +31,18 @@ export const useEnvScopeStore = defineStore('envScope', {
     },
 
     /**
+     * 构造带 scope 的 Gemini API 路径
+     * - 本地:   /api/local/gemini/...
+     * - 远程:   /api/{remoteId}/gemini/...
+     */
+    buildGeminiPath(path: string) {
+      return this.buildScopedPath('gemini', path)
+    },
+
+    /**
      * 通用带 scope 的 API 路径构造
      */
-    buildScopedPath(service: 'claude' | 'codex', path: string) {
+    buildScopedPath(service: 'claude' | 'codex' | 'gemini', path: string) {
       const trimmed = path.replace(/^\/+/, '')
       if (this.scope === 'local') {
         return `/api/local/${service}/${trimmed}`
@@ -42,4 +51,3 @@ export const useEnvScopeStore = defineStore('envScope', {
     },
   },
 })
-

@@ -1,5 +1,6 @@
 import type { ClaudeEnvironmentRecord } from '#shared/types/claude'
 import type { CodexEnvironmentRecord } from '#shared/types/codex'
+import type { GeminiEnvironmentRecord } from '#shared/types/gemini'
 
 export interface BalanceRequestConfig {
   url?: string
@@ -15,6 +16,7 @@ export interface BalanceRequestConfig {
 export type EnvWithBalance =
   | (Pick<ClaudeEnvironmentRecord, 'apiKey'> & BalanceRequestConfig)
   | (Pick<CodexEnvironmentRecord, 'apiKey'> & BalanceRequestConfig)
+  | (Pick<GeminiEnvironmentRecord, 'apiKey'> & BalanceRequestConfig)
 
 function substitutePlaceholders(input: string, apiKey: string) {
   return input.split('{{apiKey}}').join(apiKey)
