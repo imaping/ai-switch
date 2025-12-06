@@ -4,10 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "build": "chcp 65001 >nul && nuxt build",
+    "dev": "chcp 65001 >nul && nuxt dev",
+    "generate": "chcp 65001 >nul && nuxt generate",
+    "preview": "chcp 65001 >nul && nuxt preview",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

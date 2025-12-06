@@ -116,11 +116,83 @@ export class SshConnectionPool {
           client.connect(connectConfig)
         })
 
+        // 添加持久的异常事件监听器，用于检测连接异常断开
+        const onClose = (hadError: boolean) => {
+          sshPoolLogger.warn({
+            id,
+            hadError,
+            poolInfo: this.getPoolInfo(id)
+          }, 'SSH连接意外关闭，将从连接池中移除')
+
+          // 异步销毁该连接，从连接池中移除
+          pool.destroy(client).catch((err) => {
+            sshPoolLogger.error({
+              id,
+              error: err instanceof Error ? {
+                message: err.message,
+                name: err.name
+              } : err
+            }, '销毁异常关闭的SSH连接失败')
+          })
+        }
+
+        const onEnd = () => {
+          sshPoolLogger.warn({
+            id,
+            poolInfo: this.getPoolInfo(id)
+          }, 'SSH连接已结束，将从连接池中移除')
+
+          // 异步销毁该连接，从连接池中移除
+          pool.destroy(client).catch((err) => {
+            sshPoolLogger.error({
+              id,
+              error: err instanceof Error ? {
+                message: err.message,
+                name: err.name
+              } : err
+            }, '销毁已结束的SSH连接失败')
+          })
+        }
+
+        const onRuntimeError = (err: Error) => {
+          sshPoolLogger.error({
+            id,
+            error: {
+              message: err.message,
+              name: err.name,
+              stack: err.stack
+            },
+            poolInfo: this.getPoolInfo(id)
+          }, 'SSH连接运行时错误，将从连接池中移除')
+
+          // 异步销毁该连接，从连接池中移除
+          pool.destroy(client).catch((destroyErr) => {
+            sshPoolLogger.error({
+              id,
+              error: destroyErr instanceof Error ? {
+                message: destroyErr.message,
+                name: destroyErr.name
+              } : destroyErr
+            }, '销毁错误的SSH连接失败')
+          })
+        }
+
+        // 监听连接异常事件
+        client.on('close', onClose)
+        client.on('end', onEnd)
+        client.on('error', onRuntimeError)
+
         return client
       },
 
       destroy: async (client: Client) => {
         sshPoolLogger.debug({ id }, '开始销毁SSH连接')
+
+        // 移除所有事件监听器，避免内存泄漏
+        client.removeAllListeners('close')
+        client.removeAllListeners('end')
+        client.removeAllListeners('error')
+
         return new Promise<void>((resolve) => {
           const timeout = setTimeout(() => {
             sshPoolLogger.warn({ id }, 'SSH连接销毁超时（5秒），强制完成')
@@ -139,14 +211,77 @@ export class SshConnectionPool {
       validate: async (client: Client) => {
         // 检查连接是否仍然有效
         return new Promise<boolean>((resolve) => {
-          const isValid = !!(client as any)._sock && !!(client as any)._sock.readable
-          sshPoolLogger.debug({
-            id,
-            isValid,
-            hasSocket: !!(client as any)._sock,
-            isReadable: !!(client as any)._sock?.readable
-          }, '验证SSH连接有效性')
-          resolve(isValid)
+          const sock = (client as any)._sock
+          const hasSocket = !!sock
+          const isReadable = sock?.readable === true
+          const isWritable = sock?.writable === true
+          const isDestroyed = sock?.destroyed === true
+
+          // 基础检查：socket 必须存在、可读、可写且未销毁
+          const basicCheck = hasSocket && isReadable && isWritable && !isDestroyed
+
+          if (!basicCheck) {
+            sshPoolLogger.debug({
+              id,
+              isValid: false,
+              hasSocket,
+              isReadable,
+              isWritable,
+              isDestroyed
+            }, '验证SSH连接有效性 - 基础检查失败')
+            resolve(false)
+            return
+          }
+
+          // 进阶检查：尝试发送一个轻量级命令验证连接真正可用
+          // 使用 exec 'true' 命令，这是一个无副作用的快速命令
+          const timeout = setTimeout(() => {
+            sshPoolLogger.debug({
+              id,
+              isValid: false,
+              reason: 'validation_timeout'
+            }, '验证SSH连接有效性 - 验证超时')
+            resolve(false)
+          }, 3000) // 3秒超时
+
+          client.exec('true', (err, stream) => {
+            clearTimeout(timeout)
+
+            if (err) {
+              sshPoolLogger.debug({
+                id,
+                isValid: false,
+                error: {
+                  message: err.message,
+                  name: err.name
+                }
+              }, '验证SSH连接有效性 - 命令执行失败')
+              resolve(false)
+              return
+            }
+
+            // 命令执行成功，连接有效
+            stream.on('close', () => {
+              sshPoolLogger.debug({
+                id,
+                isValid: true
+              }, '验证SSH连接有效性 - 验证成功')
+              resolve(true)
+            })
+
+            stream.on('error', () => {
+              sshPoolLogger.debug({
+                id,
+                isValid: false,
+                reason: 'stream_error'
+              }, '验证SSH连接有效性 - 流错误')
+              resolve(false)
+            })
+
+            // 消费输出流
+            stream.stderr.resume()
+            stream.resume()
+          })
         })
       }
     }
