@@ -1,5 +1,8 @@
 export type RemoteAuthType = "password" | "privateKey";
 
+// 远程环境类型
+export type RemoteEnvironmentType = 'ssh' | 'wsl';
+
 export interface RemoteEnvironmentMeta {
   title: string;
   description?: string;
@@ -17,12 +20,29 @@ export interface RemoteAuthConfig {
   passphrase?: string; // 加密私钥的口令
 }
 
+// WSL 特定配置
+export interface WslConfig {
+  distroName: string;        // WSL 分发版名称，如 "Ubuntu-22.04"
+  isDefault?: boolean;       // 是否为默认分发版
+  wslVersion?: 1 | 2;        // WSL 版本
+  state?: 'Running' | 'Stopped'; // 运行状态
+}
+
 export interface RemoteEnvironmentRecord extends RemoteEnvironmentMeta {
   id: string;
-  host: string;
-  port: number;
-  username: string;
-  auth: RemoteAuthConfig;
+
+  // 环境类型
+  type: RemoteEnvironmentType;
+
+  // SSH 配置（当 type === 'ssh' 时必填）
+  host?: string;
+  port?: number;
+  username?: string;
+  auth?: RemoteAuthConfig;
+
+  // WSL 配置（当 type === 'wsl' 时必填）
+  wslConfig?: WslConfig;
+
   createdAt: string;
   updatedAt: string;
   // 最近一次连接测试信息（可选）
@@ -33,10 +53,16 @@ export interface RemoteEnvironmentRecord extends RemoteEnvironmentMeta {
 }
 
 export interface RemoteEnvironmentPayload extends RemoteEnvironmentMeta {
-  host: string;
+  type: RemoteEnvironmentType;
+
+  // SSH 配置
+  host?: string;
   port?: number;
-  username: string;
-  auth: RemoteAuthConfig;
+  username?: string;
+  auth?: RemoteAuthConfig;
+
+  // WSL 配置
+  wslConfig?: WslConfig;
 }
 
 export interface RemoteOverviewResponse {
@@ -50,5 +76,14 @@ export interface RemoteTestConnectionResult {
   error?: string;
   timeout?: boolean;
   testedAt: string;
+}
+
+// WSL 分发版发现结果
+export interface WslDistroInfo {
+  name: string;              // 分发版名称
+  state: 'Running' | 'Stopped';
+  version: 1 | 2;
+  isDefault: boolean;
+  homePath?: string;         // Windows 路径，如 \\wsl$\Ubuntu\home\user
 }
 

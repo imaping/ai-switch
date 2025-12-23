@@ -9,11 +9,11 @@ import type {
   ClaudeMcpRecord,
 } from '#shared/types/claude'
 import {
-  getRemoteHome,
-  readRemoteJson,
-  writeRemoteJson,
-  sftpWriteFile,
-} from './sftp'
+  getRemoteHomePath,
+  readRemoteJsonFile,
+  writeRemoteJsonFile,
+  writeRemoteFile,
+} from './file-adapter'
 
 const EMPTY_ENV_STORE = { environments: [] as ClaudeEnvironmentRecord[] }
 const EMPTY_MCP_STORE = { servers: [] as ClaudeMcpRecord[] }
@@ -32,7 +32,7 @@ interface ClaudeMcpConfigFile {
 }
 
 async function getPaths(remoteId: string) {
-  const home = await getRemoteHome(remoteId)
+  const home = await getRemoteHomePath(remoteId)
   const aiSwitchDir = path.posix.join(home, '.ai-switch')
   return {
     envStore: path.posix.join(aiSwitchDir, 'claude-environments.json'),
@@ -47,14 +47,14 @@ async function getPaths(remoteId: string) {
 
 async function writeClaudeSettings(remoteId: string, config: ClaudeCodeConfig) {
   const { settingsPath } = await getPaths(remoteId)
-  await sftpWriteFile(remoteId, settingsPath, JSON.stringify(config, null, 2))
+  await writeRemoteFile(remoteId, settingsPath, JSON.stringify(config, null, 2))
 }
 
 async function readClaudeMcpConfig(
   remoteId: string,
 ): Promise<ClaudeMcpConfigFile> {
   const { mcpConfigPath } = await getPaths(remoteId)
-  return await readRemoteJson<ClaudeMcpConfigFile>(remoteId, mcpConfigPath, {})
+  return await readRemoteJsonFile<ClaudeMcpConfigFile>(remoteId, mcpConfigPath, {})
 }
 
 async function writeClaudeMcpConfig(
@@ -64,7 +64,7 @@ async function writeClaudeMcpConfig(
   const current = await readClaudeMcpConfig(remoteId)
   const next = updater(current)
   const { mcpConfigPath } = await getPaths(remoteId)
-  await sftpWriteFile(remoteId, mcpConfigPath, JSON.stringify(next, null, 2))
+  await writeRemoteFile(remoteId, mcpConfigPath, JSON.stringify(next, null, 2))
 }
 
 // ========== Environment Store 读写 ==========
@@ -73,7 +73,7 @@ async function readEnvironmentStore(
   remoteId: string,
 ): Promise<ClaudeEnvironmentRecord[]> {
   const { envStore } = await getPaths(remoteId)
-  const file = await readRemoteJson<ClaudeEnvironmentStoreFile>(
+  const file = await readRemoteJsonFile<ClaudeEnvironmentStoreFile>(
     remoteId,
     envStore,
     EMPTY_ENV_STORE,
@@ -86,7 +86,7 @@ async function writeEnvironmentStore(
   environments: ClaudeEnvironmentRecord[],
 ) {
   const { envStore } = await getPaths(remoteId)
-  await writeRemoteJson(remoteId, envStore, { environments })
+  await writeRemoteJsonFile(remoteId, envStore, { environments })
 }
 
 // ========== General Config Store 读写 ==========
@@ -95,7 +95,7 @@ async function readGeneralConfigStore(
   remoteId: string,
 ): Promise<ClaudeGeneralConfig | undefined> {
   const { commonStore } = await getPaths(remoteId)
-  const record = await readRemoteJson<ClaudeGeneralConfig | null>(
+  const record = await readRemoteJsonFile<ClaudeGeneralConfig | null>(
     remoteId,
     commonStore,
     null,
@@ -113,7 +113,7 @@ async function writeGeneralConfigStore(
     payload,
     updatedAt: new Date().toISOString(),
   }
-  await writeRemoteJson(remoteId, commonStore, record)
+  await writeRemoteJsonFile(remoteId, commonStore, record)
   return record
 }
 
@@ -121,7 +121,7 @@ async function writeGeneralConfigStore(
 
 async function readMcpStore(remoteId: string): Promise<ClaudeMcpRecord[]> {
   const { mcpStore } = await getPaths(remoteId)
-  const file = await readRemoteJson<ClaudeMcpStoreFile>(
+  const file = await readRemoteJsonFile<ClaudeMcpStoreFile>(
     remoteId,
     mcpStore,
     EMPTY_MCP_STORE,
@@ -134,7 +134,7 @@ async function writeMcpStore(
   servers: ClaudeMcpRecord[],
 ): Promise<void> {
   const { mcpStore } = await getPaths(remoteId)
-  await writeRemoteJson(remoteId, mcpStore, { servers })
+  await writeRemoteJsonFile(remoteId, mcpStore, { servers })
 }
 
 // ========== 验证函数 ==========

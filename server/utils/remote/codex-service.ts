@@ -9,12 +9,12 @@ import type {
   CodexMcpRecord,
 } from '#shared/types/codex'
 import {
-  getRemoteHome,
-  readRemoteJson,
-  writeRemoteJson,
-  sftpReadFile,
-  sftpWriteFile,
-} from './sftp'
+  getRemoteHomePath,
+  readRemoteJsonFile,
+  writeRemoteJsonFile,
+  readRemoteFile,
+  writeRemoteFile,
+} from './file-adapter'
 
 type TomlObject = Record<string, unknown>
 
@@ -51,7 +51,7 @@ const stringifyToml = (content: TomlObject): string =>
   TOML.stringify(content as any)
 
 async function getPaths(remoteId: string) {
-  const home = await getRemoteHome(remoteId)
+  const home = await getRemoteHomePath(remoteId)
   const aiSwitchDir = path.posix.join(home, '.ai-switch')
   return {
     configPath: path.posix.join(home, '.codex', 'config.toml'),
@@ -69,7 +69,7 @@ async function readCodexConfigFile(
 ): Promise<CodexConfigFile | null> {
   const { configPath } = await getPaths(remoteId)
   try {
-    const raw = await sftpReadFile(remoteId, configPath)
+    const raw = await readRemoteFile(remoteId, configPath)
     return { raw, parsed: parseToml(raw) }
   } catch {
     return null
@@ -81,7 +81,7 @@ async function writeCodexConfigString(
   content: string,
 ): Promise<void> {
   const { configPath } = await getPaths(remoteId)
-  await sftpWriteFile(remoteId, configPath, content)
+  await writeRemoteFile(remoteId, configPath, content)
 }
 
 async function writeCodexConfigObject(
@@ -96,7 +96,7 @@ async function writeCodexConfigObject(
 
 async function readCodexAuthFile(remoteId: string): Promise<CodexAuthFile> {
   const { authPath } = await getPaths(remoteId)
-  return await readRemoteJson<CodexAuthFile>(remoteId, authPath, {})
+  return await readRemoteJsonFile<CodexAuthFile>(remoteId, authPath, {})
 }
 
 async function writeCodexAuthFile(
@@ -106,7 +106,7 @@ async function writeCodexAuthFile(
   const { authPath } = await getPaths(remoteId)
   const current = await readCodexAuthFile(remoteId)
   const next = updater(current)
-  await writeRemoteJson(remoteId, authPath, next)
+  await writeRemoteJsonFile(remoteId, authPath, next)
 }
 
 // ========== Environment Store 读写 ==========
@@ -115,7 +115,7 @@ async function readEnvironmentStore(
   remoteId: string,
 ): Promise<CodexEnvironmentRecord[]> {
   const { envStore } = await getPaths(remoteId)
-  const file = await readRemoteJson<CodexEnvironmentStoreFile>(
+  const file = await readRemoteJsonFile<CodexEnvironmentStoreFile>(
     remoteId,
     envStore,
     EMPTY_ENV_STORE,
@@ -128,7 +128,7 @@ async function writeEnvironmentStore(
   environments: CodexEnvironmentRecord[],
 ): Promise<void> {
   const { envStore } = await getPaths(remoteId)
-  await writeRemoteJson(remoteId, envStore, { environments })
+  await writeRemoteJsonFile(remoteId, envStore, { environments })
 }
 
 // ========== General Config Store 读写 ==========
@@ -137,7 +137,7 @@ async function readGeneralConfigStore(
   remoteId: string,
 ): Promise<CodexGeneralConfig | undefined> {
   const { commonStore } = await getPaths(remoteId)
-  const record = await readRemoteJson<CodexGeneralConfig | null>(
+  const record = await readRemoteJsonFile<CodexGeneralConfig | null>(
     remoteId,
     commonStore,
     null,
@@ -155,7 +155,7 @@ async function writeGeneralConfigStore(
     payload,
     updatedAt: new Date().toISOString(),
   }
-  await writeRemoteJson(remoteId, commonStore, record)
+  await writeRemoteJsonFile(remoteId, commonStore, record)
   return record
 }
 
@@ -163,7 +163,7 @@ async function writeGeneralConfigStore(
 
 async function readMcpStore(remoteId: string): Promise<CodexMcpRecord[]> {
   const { mcpStore } = await getPaths(remoteId)
-  const file = await readRemoteJson<CodexMcpStoreFile>(
+  const file = await readRemoteJsonFile<CodexMcpStoreFile>(
     remoteId,
     mcpStore,
     EMPTY_MCP_STORE,
@@ -176,7 +176,7 @@ async function writeMcpStore(
   servers: CodexMcpRecord[],
 ): Promise<void> {
   const { mcpStore } = await getPaths(remoteId)
-  await writeRemoteJson(remoteId, mcpStore, { servers })
+  await writeRemoteJsonFile(remoteId, mcpStore, { servers })
 }
 
 // ========== BaseUrl 处理函数 ==========

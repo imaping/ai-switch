@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type {
   RemoteEnvironmentRecord,
   RemoteTestConnectionResult,
+  WslDistroInfo,
 } from '#shared/types/remote'
 import { $fetch } from 'ofetch'
 
@@ -9,10 +10,18 @@ interface RemoteOverview {
   environments: RemoteEnvironmentRecord[]
 }
 
+interface WslDiscoverResult {
+  available: boolean
+  distros: WslDistroInfo[]
+}
+
 export const useRemoteStore = defineStore('remote', {
   state: () => ({
     environments: [] as RemoteEnvironmentRecord[],
     error: undefined as string | undefined,
+    wslAvailable: false,
+    wslDistros: [] as WslDistroInfo[],
+    wslLoading: false,
   }),
   actions: {
     async fetchOverview() {
@@ -95,5 +104,77 @@ export const useRemoteStore = defineStore('remote', {
         throw err
       }
     },
+
+    // ========== WSL 相关 Actions ==========
+
+    async checkWslAvailable() {
+      this.error = undefined
+      try {
+        const result = await $fetch<{ success: boolean; data: { available: boolean } }>(
+          '/api/remote/wsl/available'
+        )
+        this.wslAvailable = result.data.available
+        return result.data.available
+      } catch (err: any) {
+        this.error = err?.message || '检查 WSL 可用性失败'
+        this.wslAvailable = false
+        return false
+      }
+    },
+
+    async discoverWslDistros() {
+      this.error = undefined
+      this.wslLoading = true
+      try {
+        const result = await $fetch<{ success: boolean; data: WslDiscoverResult }>(
+          '/api/remote/wsl/discover'
+        )
+
+        if (result.success && result.data) {
+          this.wslAvailable = result.data.available
+          this.wslDistros = result.data.distros || []
+        } else {
+          this.wslAvailable = false
+          this.wslDistros = []
+        }
+
+        return this.wslDistros
+      } catch (err: any) {
+        this.error = err?.message || '发现 WSL 分发版失败'
+        this.wslAvailable = false
+        this.wslDistros = []
+        throw err
+      } finally {
+        this.wslLoading = false
+      }
+    },
+
+    async createWslEnvironment(distroName: string, title?: string) {
+      this.error = undefined
+      try {
+        const result = await $fetch<{ success: boolean; data: RemoteEnvironmentRecord }>(
+          '/api/remote/wsl/environments',
+          {
+            method: 'POST',
+            body: { distroName, title },
+          }
+        )
+
+        if (result.success && result.data) {
+          this.environments.push(result.data)
+          return result.data
+        }
+
+        throw new Error('创建 WSL 环境失败')
+      } catch (err: any) {
+        this.error = err?.message || '创建 WSL 环境失败'
+        throw err
+      }
+    },
+  },
+
+  getters: {
+    sshEnvironments: (state) => state.environments.filter(env => env.type === 'ssh'),
+    wslEnvironments: (state) => state.environments.filter(env => env.type === 'wsl'),
   },
 })

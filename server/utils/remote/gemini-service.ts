@@ -8,11 +8,11 @@ import type {
   GeminiMcpRecord,
 } from '#shared/types/gemini'
 import {
-  getRemoteHome,
-  readRemoteJson,
-  writeRemoteJson,
-  sftpWriteFile,
-} from './sftp'
+  getRemoteHomePath,
+  readRemoteJsonFile,
+  writeRemoteJsonFile,
+  writeRemoteFile,
+} from './file-adapter'
 
 const EMPTY_ENV_STORE = { environments: [] as GeminiEnvironmentRecord[] }
 const EMPTY_MCP_STORE = { servers: [] as GeminiMcpRecord[] }
@@ -84,7 +84,7 @@ function composeEnvContent(
 }
 
 async function getPaths(remoteId: string) {
-  const home = await getRemoteHome(remoteId)
+  const home = await getRemoteHomePath(remoteId)
   const aiSwitchDir = path.posix.join(home, '.ai-switch')
   return {
     envStore: path.posix.join(aiSwitchDir, 'gemini-environments.json'),
@@ -99,14 +99,14 @@ async function getPaths(remoteId: string) {
 
 async function writeGeminiEnvFile(remoteId: string, content: string) {
   const { envPath } = await getPaths(remoteId)
-  await sftpWriteFile(remoteId, envPath, content)
+  await writeRemoteFile(remoteId, envPath, content)
 }
 
 // ========== Gemini MCP Config 读写 ==========
 
 async function readGeminiMcpConfig(remoteId: string): Promise<GeminiMcpConfigFile> {
   const { mcpConfigPath } = await getPaths(remoteId)
-  return await readRemoteJson<GeminiMcpConfigFile>(remoteId, mcpConfigPath, {})
+  return await readRemoteJsonFile<GeminiMcpConfigFile>(remoteId, mcpConfigPath, {})
 }
 
 async function writeGeminiMcpConfig(
@@ -116,14 +116,14 @@ async function writeGeminiMcpConfig(
   const current = await readGeminiMcpConfig(remoteId)
   const next = updater(current)
   const { mcpConfigPath } = await getPaths(remoteId)
-  await sftpWriteFile(remoteId, mcpConfigPath, JSON.stringify(next, null, 2))
+  await writeRemoteFile(remoteId, mcpConfigPath, JSON.stringify(next, null, 2))
 }
 
 // ========== Environment Store 读写 ==========
 
 async function readEnvironmentStore(remoteId: string): Promise<GeminiEnvironmentRecord[]> {
   const { envStore } = await getPaths(remoteId)
-  const file = await readRemoteJson<GeminiEnvironmentStoreFile>(
+  const file = await readRemoteJsonFile<GeminiEnvironmentStoreFile>(
     remoteId,
     envStore,
     EMPTY_ENV_STORE,
@@ -136,7 +136,7 @@ async function writeEnvironmentStore(
   environments: GeminiEnvironmentRecord[],
 ) {
   const { envStore } = await getPaths(remoteId)
-  await writeRemoteJson(remoteId, envStore, { environments })
+  await writeRemoteJsonFile(remoteId, envStore, { environments })
 }
 
 // ========== General Config Store 读写 ==========
@@ -145,7 +145,7 @@ async function readGeneralConfigStore(
   remoteId: string,
 ): Promise<GeminiGeneralConfig | undefined> {
   const { commonStore } = await getPaths(remoteId)
-  const record = await readRemoteJson<GeminiGeneralConfig | null>(
+  const record = await readRemoteJsonFile<GeminiGeneralConfig | null>(
     remoteId,
     commonStore,
     null,
@@ -163,7 +163,7 @@ async function writeGeneralConfigStore(
     payload,
     updatedAt: new Date().toISOString(),
   }
-  await writeRemoteJson(remoteId, commonStore, record)
+  await writeRemoteJsonFile(remoteId, commonStore, record)
   return record
 }
 
@@ -171,7 +171,7 @@ async function writeGeneralConfigStore(
 
 async function readMcpStore(remoteId: string): Promise<GeminiMcpRecord[]> {
   const { mcpStore } = await getPaths(remoteId)
-  const file = await readRemoteJson<GeminiMcpStoreFile>(
+  const file = await readRemoteJsonFile<GeminiMcpStoreFile>(
     remoteId,
     mcpStore,
     EMPTY_MCP_STORE,
@@ -181,7 +181,7 @@ async function readMcpStore(remoteId: string): Promise<GeminiMcpRecord[]> {
 
 async function writeMcpStore(remoteId: string, servers: GeminiMcpRecord[]) {
   const { mcpStore } = await getPaths(remoteId)
-  await writeRemoteJson(remoteId, mcpStore, { servers })
+  await writeRemoteJsonFile(remoteId, mcpStore, { servers })
 }
 
 // ========== 验证函数 ==========
