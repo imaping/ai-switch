@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+  <id>ai-switch</id>
+  <name>ai-switch</name>
+  <description>运行 ai-switch 的系统服务</description>
+
+  <!-- 可执行程序 -->
+  <executable>cmd.exe</executable>
+
+  <!-- 注意：建议用引号包裹整个命令字符串 -->
+  <arguments>/c pnpm dev</arguments>
+
+  <!-- 设置工作目录为当前 exe 所在目录 -->
+  <workingdirectory>%BASE%</workingdirectory>
+
+  <logpath>logs</logpath>
+
+  <!-- 日志配置 -->
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold> <!-- 单位 KB (10MB) -->
+    <keepFiles>8</keepFiles>
+  </log>
+
+  <env name="PATH" value="%PATH%;C:\scoop\apps\nvm\current\nodejs\nodejs"/>
+  <env name="USERPROFILE" value="C:\Users\miaoj"/>
+  <env name="APPDATA" value="C:\Users\miaoj\AppData\Roaming"/>
+
+  <!-- 停止策略：优先停止父进程，这对 Node/pnpm 脚本很有效 -->
+  <stopparentprocessfirst>true</stopparentprocessfirst>
+</service>
