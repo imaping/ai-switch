@@ -13,7 +13,7 @@
   <!-- 设置工作目录为当前 exe 所在目录 -->
   <workingdirectory>%BASE%</workingdirectory>
 
-  <logpath>logs</logpath>
+  <logpath>%BASE%\logs</logpath>
 
   <!-- 日志配置 -->
   <log mode="roll-by-size">
@@ -24,6 +24,16 @@
   <env name="PATH" value="%PATH%;C:\scoop\apps\nvm\current\nodejs\nodejs"/>
   <env name="USERPROFILE" value="C:\Users\miaoj"/>
   <env name="APPDATA" value="C:\Users\miaoj\AppData\Roaming"/>
+
+  <!-- 服务账户配置：使用当前用户账户运行服务 -->
+  <!-- 格式：.\用户名 表示本地账户，或者 DOMAIN\用户名 表示域账户 -->
+  <serviceaccount>
+    <domain>.</domain>
+    <user>miaoj</user>
+    <password>128255</password>
+    <!-- 如果不想在配置文件中明文保存密码，可以使用 allowservicelogon 选项 -->
+    <allowservicelogon>true</allowservicelogon>
+  </serviceaccount>
 
   <!-- 停止策略：优先停止父进程，这对 Node/pnpm 脚本很有效 -->
   <stopparentprocessfirst>true</stopparentprocessfirst>
