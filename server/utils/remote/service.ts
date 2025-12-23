@@ -351,18 +351,20 @@ export async function execRemoteCommand(id: string, command: string) {
 // ========== WSL 相关函数 ==========
 
 /**
+ * 检查 WSL 是否可用
+ */
+export async function checkWslAvailable() {
+  const { checkWslAvailable: checkWsl } = await import('./wsl')
+  return await checkWsl()
+}
+
+/**
  * 发现所有 WSL 分发版
  */
 export async function listWslDistros() {
   const { discoverWslDistros } = await import('./wsl')
   return await discoverWslDistros()
 }
-
-/**
- * 检查 WSL 是否可用
- * 注意：此函数已移至 wsl.ts，请直接从 wsl.ts 导入
- * 为避免重复导出警告，此处不再导出
- */
 
 /**
  * 创建 WSL 环境
