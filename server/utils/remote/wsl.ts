@@ -1,5 +1,6 @@
 import { execSync } from 'child_process'
 import path from 'path'
+import { promises as fs } from 'fs'
 import type { WslDistroInfo } from '#shared/types/remote'
 import { remoteServiceLogger } from '../logger'
 
@@ -125,7 +126,12 @@ export function getWslHomePath(distroName: string): string {
     const output = execSync(cmd, { encoding: 'utf8', timeout: 5000 })
     return output.trim()
   } catch (error) {
-    throw new Error(`无法获取 WSL Home 路径: ${(error as Error).message}`)
+    const errorMsg = (error as Error).message
+    // 检查是否是 WSL 启动失败的错误
+    if (errorMsg.includes('0x8007054f') || errorMsg.includes('CreateInstance') || errorMsg.includes('CreateVm')) {
+      throw new Error(`WSL 分发版 "${distroName}" 启动失败，可能是网络配置问题。请尝试手动启动 WSL 或检查 WSL 配置。`)
+    }
+    throw new Error(`无法获取 WSL Home 路径: ${errorMsg}`)
   }
 }
 
@@ -152,11 +158,35 @@ export function getWslHomePathLinux(distroName: string): string {
     homePathCache.set(distroName, { path: homePath, timestamp: now })
     return homePath
   } catch (error) {
-    throw new Error(`无法获取 WSL Home 路径: ${(error as Error).message}`)
+    const errorMsg = (error as Error).message
+    // 检查是否是 WSL 启动失败的错误
+    if (errorMsg.includes('0x8007054f') || errorMsg.includes('CreateInstance') || errorMsg.includes('CreateVm')) {
+      throw new Error(`WSL 分发版 "${distroName}" 启动失败，可能是网络配置问题。请尝试手动启动 WSL 或检查 WSL 配置。`)
+    }
+    throw new Error(`无法获取 WSL Home 路径: ${errorMsg}`)
   }
 }
 
 // ========== WSL 文件操作 ==========
+
+/**
+ * 将 Linux 路径转换为 Windows UNC 路径
+ * 例如：/home/user/.config -> \\wsl$\Ubuntu-22.04\home\user\.config
+ */
+function linuxPathToWindowsUNC(distroName: string, linuxPath: string): string {
+  if (!validateDistroName(distroName)) {
+    throw new Error('无效的分发版名称')
+  }
+
+  if (!validateLinuxPath(linuxPath)) {
+    throw new Error('无效的文件路径')
+  }
+
+  // 构建 UNC 路径：\\wsl$\{distroName}\{linuxPath}
+  // 注意：需要将 Linux 路径的 / 转换为 Windows 的 \
+  const windowsPath = linuxPath.replace(/\//g, '\\')
+  return `\\\\wsl$\\${distroName}${windowsPath}`
+}
 
 /**
  * 读取 WSL 文件内容
@@ -171,15 +201,13 @@ export async function wslReadFile(distroName: string, linuxPath: string): Promis
   }
 
   try {
-    // 通过 wsl 命令读取文件
-    const cmd = `wsl -d ${distroName} -e cat "${linuxPath}"`
-    const content = execSync(cmd, {
-      encoding: 'utf8',
-      maxBuffer: 10 * 1024 * 1024, // 10MB
-      timeout: 10000
-    })
+    // 将 Linux 路径转换为 Windows UNC 路径
+    const windowsPath = linuxPathToWindowsUNC(distroName, linuxPath)
 
-    remoteServiceLogger.debug({ distroName, linuxPath }, '读取 WSL 文件成功')
+    // 使用 Node.js fs API 直接读取文件
+    const content = await fs.readFile(windowsPath, 'utf8')
+
+    remoteServiceLogger.debug({ distroName, linuxPath, windowsPath }, '读取 WSL 文件成功')
     return content
   } catch (error) {
     remoteServiceLogger.error({
@@ -208,25 +236,17 @@ export async function wslWriteFile(
   }
 
   try {
+    // 将 Linux 路径转换为 Windows UNC 路径
+    const windowsPath = linuxPathToWindowsUNC(distroName, linuxPath)
+
     // 确保目录存在
-    const dir = path.posix.dirname(linuxPath)
-    execSync(`wsl -d ${distroName} -e mkdir -p "${dir}"`, {
-      encoding: 'utf8',
-      timeout: 5000
-    })
+    const dir = path.dirname(windowsPath)
+    await fs.mkdir(dir, { recursive: true })
 
-    // 写入文件（使用 heredoc 避免转义问题）
-    // 注意：需要转义内容中的单引号
-    const escapedContent = content.replace(/'/g, "'\\''")
-    const cmd = `wsl -d ${distroName} -e sh -c 'cat > "${linuxPath}" << '"'"'EOF'"'"'\n${escapedContent}\nEOF'`
+    // 使用 Node.js fs API 直接写入文件
+    await fs.writeFile(windowsPath, content, 'utf8')
 
-    execSync(cmd, {
-      encoding: 'utf8',
-      timeout: 10000,
-      maxBuffer: 10 * 1024 * 1024
-    })
-
-    remoteServiceLogger.debug({ distroName, linuxPath }, '写入 WSL 文件成功')
+    remoteServiceLogger.debug({ distroName, linuxPath, windowsPath }, '写入 WSL 文件成功')
   } catch (error) {
     remoteServiceLogger.error({
       distroName,
@@ -250,17 +270,22 @@ export async function wslUnlink(distroName: string, linuxPath: string): Promise<
   }
 
   try {
-    const cmd = `wsl -d ${distroName} -e rm -f "${linuxPath}"`
-    execSync(cmd, { encoding: 'utf8', timeout: 5000 })
+    // 将 Linux 路径转换为 Windows UNC 路径
+    const windowsPath = linuxPathToWindowsUNC(distroName, linuxPath)
 
-    remoteServiceLogger.debug({ distroName, linuxPath }, '删除 WSL 文件成功')
+    // 使用 Node.js fs API 直接删除文件
+    await fs.unlink(windowsPath)
+
+    remoteServiceLogger.debug({ distroName, linuxPath, windowsPath }, '删除 WSL 文件成功')
   } catch (error) {
     // 忽略文件不存在的错误
-    remoteServiceLogger.debug({
-      distroName,
-      linuxPath,
-      error: (error as Error).message
-    }, '删除 WSL 文件失败（可能不存在）')
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      remoteServiceLogger.debug({
+        distroName,
+        linuxPath,
+        error: (error as Error).message
+      }, '删除 WSL 文件失败')
+    }
   }
 }
 
