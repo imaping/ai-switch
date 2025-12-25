@@ -42,7 +42,12 @@ const isPlainObject = (value: unknown): value is TomlObject =>
 const parseToml = (content: string): TomlObject =>
   (TOML.parse(content || '') as TomlObject) ?? {}
 
-const stringifyToml = (content: TomlObject): string => TOML.stringify(content as any)
+const stringifyToml = (content: TomlObject): string => {
+  const raw = TOML.stringify(content as any)
+  // 移除 @iarna/toml 自动添加的缩进
+  // 将所有以空格开头的行（表头和键值对）移到行首
+  return raw.replace(/^[ \t]+(\[|[A-Za-z_])/gm, '$1')
+}
 
 function stripMcpServers(content: string): string {
   try {
