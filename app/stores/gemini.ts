@@ -30,7 +30,22 @@ export const useGeminiStore = defineStore('gemini', {
         const data = await $fetch<GeminiOverview>(
           scopeStore.buildGeminiPath('overview'),
         )
-        this.environments = data.environments
+
+        // 保留旧的余额数据
+        const oldBalances = new Map(
+          this.environments.map(env => [
+            env.id,
+            { currentBalance: env.currentBalance, balanceUpdatedAt: env.balanceUpdatedAt }
+          ])
+        )
+
+        // 合并数据：新数据 + 旧余额
+        this.environments = data.environments.map(env => ({
+          ...env,
+          currentBalance: oldBalances.get(env.id)?.currentBalance,
+          balanceUpdatedAt: oldBalances.get(env.id)?.balanceUpdatedAt
+        }))
+
         this.generalConfig = data.generalConfig
         this.mcpServers = data.mcpServers
         this.activeId = data.activeId
@@ -98,7 +113,15 @@ export const useGeminiStore = defineStore('gemini', {
         )
         this.activeId = id
         const index = this.environments.findIndex(env => env.id === id)
-        if (index !== -1) this.environments[index] = activated
+        if (index !== -1) {
+          // 保留旧的余额数据
+          const oldEnv = this.environments[index]
+          this.environments[index] = {
+            ...activated,
+            currentBalance: oldEnv.currentBalance,
+            balanceUpdatedAt: oldEnv.balanceUpdatedAt
+          }
+        }
         return activated
       } catch (err: any) {
         this.error = err?.message || '激活 Gemini 环境失败'
